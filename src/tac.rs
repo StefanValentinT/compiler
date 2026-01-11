@@ -1,6 +1,9 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use crate::parser::{BinaryOp, Expr, FuncDef, Program, Stmt, UnaryOp};
+use crate::parser::Decl::Declaration;
+use crate::parser::{
+    BinaryOp, BlockItem, Decl, Expr, FuncDef, Program, Stmt, UnaryOp, make_temporary, next_number,
+};
 
 #[derive(Debug)]
 pub enum TacProgram {
@@ -77,14 +80,6 @@ pub enum TacBinaryOp {
     GreaterOrEqual,
 }
 
-static TEMP_VAR_COUNTER: AtomicI32 = AtomicI32::new(0);
-
-fn make_temporary() -> String {
-    let c = TEMP_VAR_COUNTER.load(Ordering::SeqCst);
-    TEMP_VAR_COUNTER.fetch_add(1, Ordering::SeqCst);
-    format!("tmp.{c}")
-}
-
 pub fn gen_tac(program: Program) -> TacProgram {
     match program {
         Program::Program { main_func } => TacProgram::Program {
@@ -98,7 +93,26 @@ fn funcdef_to_tac(func: FuncDef) -> TacFuncDef {
         FuncDef::Function { name, body } => {
             let mut instructions = Vec::new();
 
-            //stmt_to_tac(body[0], &mut instructions);
+            for block_item in body {
+                match block_item {
+                    BlockItem::S(stmt) => stmt_to_tac(stmt, &mut instructions),
+
+                    BlockItem::D(decl) => match decl {
+                        Decl::Declaration {
+                            name,
+                            expr: Some(initial_value),
+                        } => {
+                            let rhs = expr_to_tac(initial_value, &mut instructions);
+                            instructions.push(TacInstruction::Copy {
+                                src: rhs,
+                                dest: TacVal::Var(name), 
+                            });
+                        }
+
+                        Decl::Declaration { name, expr: None } => (),
+                    },
+                }
+            }
 
             TacFuncDef::Function {
                 name,
@@ -149,8 +163,18 @@ fn expr_to_tac(e: Expr, instructions: &mut Vec<TacInstruction>) -> TacVal {
                 dst
             }
         },
-        Expr::Var(_) => todo!(),
-        Expr::Assignment(expr, expr1) => todo!(),
+        Expr::Var(v) => TacVal::Var(v),
+        Expr::Assignment(left, rhs) => match *left {
+            Expr::Var(v) => {
+                let result = expr_to_tac(*rhs, instructions);
+                instructions.push(TacInstruction::Copy {
+                    src: result,
+                    dest: TacVal::Var(v.clone()),
+                });
+                TacVal::Var(v)
+            }
+            _ => panic!("Invalid lvalue in assignment!"),
+        },
     }
 }
 
@@ -163,11 +187,8 @@ fn short_circuit_logic(
     let result_name = make_temporary();
     let result = TacVal::Var(result_name.clone());
 
-    let false_label = format!(
-        "and_false{}",
-        TEMP_VAR_COUNTER.fetch_add(1, Ordering::SeqCst)
-    );
-    let end_label = format!("and_end{}", TEMP_VAR_COUNTER.fetch_add(1, Ordering::SeqCst));
+    let false_label = format!("and_false{}", next_number());
+    let end_label = format!("and_end{}", next_number());
 
     match op {
         BinaryOp::And => {
@@ -201,8 +222,8 @@ fn short_circuit_logic(
         }
 
         BinaryOp::Or => {
-            let true_label = format!("or_true{}", TEMP_VAR_COUNTER.fetch_add(1, Ordering::SeqCst));
-            let end_label = format!("or_end{}", TEMP_VAR_COUNTER.fetch_add(1, Ordering::SeqCst));
+            let true_label = format!("or_true{}", next_number());
+            let end_label = format!("or_end{}", next_number());
 
             let v1 = expr_to_tac(expr1, instructions);
             instructions.push(TacInstruction::JumpIfNotZero {

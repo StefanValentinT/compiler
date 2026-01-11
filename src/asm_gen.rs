@@ -93,7 +93,6 @@ fn fixup_instructions(func: AsmFuncDef, stack_size: i32) -> AsmFuncDef {
 
     for instr in instructions {
         match instr {
-            // ---------- cmp mem, mem ----------
             AsmInstruction::Cmp(lhs @ AsmOperand::Stack(_), rhs @ AsmOperand::Stack(_)) => {
                 fixed.push(AsmInstruction::Mov {
                     src: lhs,
@@ -101,8 +100,6 @@ fn fixup_instructions(func: AsmFuncDef, stack_size: i32) -> AsmFuncDef {
                 });
                 fixed.push(AsmInstruction::Cmp(AsmOperand::Reg(AsmReg::R10), rhs));
             }
-
-            // ---------- cmp *, imm ----------
             AsmInstruction::Cmp(lhs, AsmOperand::Imm(val)) => {
                 fixed.push(AsmInstruction::Mov {
                     src: AsmOperand::Imm(val),
@@ -111,7 +108,6 @@ fn fixup_instructions(func: AsmFuncDef, stack_size: i32) -> AsmFuncDef {
                 fixed.push(AsmInstruction::Cmp(lhs, AsmOperand::Reg(AsmReg::R11)));
             }
 
-            // ---------- idiv imm ----------
             AsmInstruction::Idiv(AsmOperand::Imm(val)) => {
                 fixed.push(AsmInstruction::Mov {
                     src: AsmOperand::Imm(val),
@@ -120,7 +116,6 @@ fn fixup_instructions(func: AsmFuncDef, stack_size: i32) -> AsmFuncDef {
                 fixed.push(AsmInstruction::Idiv(AsmOperand::Reg(AsmReg::R10)));
             }
 
-            // ---------- mov mem, mem ----------
             AsmInstruction::Mov {
                 src: src @ AsmOperand::Stack(_),
                 dest: dest @ AsmOperand::Stack(_),
@@ -135,7 +130,6 @@ fn fixup_instructions(func: AsmFuncDef, stack_size: i32) -> AsmFuncDef {
                 });
             }
 
-            // ---------- everything else ----------
             other => fixed.push(other),
         }
     }

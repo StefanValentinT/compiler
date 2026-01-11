@@ -8,11 +8,15 @@ mod code_emission;
 mod lexer;
 mod parser;
 mod queue;
+mod semantic_analysis;
 mod tac;
 
 use clap::Parser;
 
-use crate::{asm_gen::gen_asm, code_emission::*, lexer::lex_string, parser::parse, tac::gen_tac};
+use crate::{
+    asm_gen::gen_asm, code_emission::*, lexer::lex_string, parser::parse,
+    semantic_analysis::variable_resolution_pass, tac::gen_tac,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -25,6 +29,8 @@ struct Args {
     codegen: bool,
     #[arg(long)]
     tacky: bool,
+    #[arg(long)]
+    validate: bool,
 
     filename: String,
 }
@@ -64,7 +70,13 @@ fn main() {
         return;
     }
 
-    let tac_ast = gen_tac(ast);
+    let transformed_ast = variable_resolution_pass(ast);
+    println!("AST after Semantic Analysis:\n{:#?}", transformed_ast);
+    if args.validate {
+        return;
+    }
+
+    let tac_ast = gen_tac(transformed_ast);
     println!("TAC-AST:\n{:#?}", tac_ast);
     if args.tacky {
         return;
