@@ -1,3 +1,4 @@
+
 int main(void) {
-    return 2 * (14 + -4);
+    return (0 == 0 && 3 == 2 + 1 > 1) + 1;
 }

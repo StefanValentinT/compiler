@@ -29,6 +29,7 @@ pub enum Expr {
 pub enum UnaryOp {
     Complement,
     Negate,
+    Not,
 }
 
 #[derive(Debug, Clone)]
@@ -38,6 +39,15 @@ pub enum BinaryOp {
     Multiply,
     Divide,
     Remainder,
+
+    And,
+    Or,
+    Equal,
+    NotEqual,
+    LessThan,
+    LessOrEqual,
+    GreaterThan,
+    GreaterOrEqual,
 }
 
 pub fn parse(tokens: Queue<Token>) -> Program {
@@ -84,8 +94,8 @@ fn parse_factor(tokens: &mut Queue<Token>) -> Expr {
     let next_token = tokens.remove().unwrap();
     match next_token {
         Token::IntLiteral(val) => Expr::Constant(val),
-        Token::Tilde | Token::Minus => {
-            let op = parse_unop(next_token);
+        Token::Tilde | Token::Minus | Token::Not => {
+            let op = parse_unop(&next_token);
             let inner_expr = parse_factor(tokens);
             Expr::Unary(op, Box::new(inner_expr))
         }
@@ -116,8 +126,8 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
             break;
         }
 
-        let op = parse_binop(tokens.remove().unwrap());
-        let right = parse_expr(tokens, prec + 1);
+        let op = parse_binop(&tokens.remove().unwrap()).unwrap();
+        let right = parse_expr(tokens, prec);
         left = Expr::Binary(op, Box::new(left), Box::new(right));
     }
 
@@ -125,10 +135,7 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
 }
 
 fn is_token_binop(tok: &Token) -> bool {
-    matches!(
-        tok,
-        Token::Plus | Token::Minus | Token::Multiply | Token::Divide | Token::Remainder
-    )
+    parse_binop(tok).is_ok()
 }
 
 fn precedence(tok: &Token) -> i32 {
@@ -139,28 +146,45 @@ fn precedence(tok: &Token) -> i32 {
         Multiply => 50,
         Divide => 50,
         Remainder => 50,
+        LessThan => 35,
+        LessOrEqual => 35,
+        GreaterThan => 35,
+        GreaterOrEqual => 35,
+        Equal => 30,
+        NotEqual => 30,
+        And => 10,
+        Or => 5,
         _ => panic!("{:#?} has no precedence.", tok),
     }
 }
 
-fn parse_unop(tok: Token) -> UnaryOp {
+fn parse_unop(tok: &Token) -> UnaryOp {
     match tok {
         Token::Minus => UnaryOp::Negate,
         Token::Tilde => UnaryOp::Complement,
         Token::Decrement => todo!(),
+        Token::Not => UnaryOp::Not,
         _ => panic!("Syntax Error: Expected unary operator, got {:?}", tok),
     }
 }
 
-fn parse_binop(tok: Token) -> BinaryOp {
+fn parse_binop(tok: &Token) -> Result<BinaryOp, ()> {
     use BinaryOp::*;
     match tok {
-        Token::Plus => Add,
-        Token::Minus => Subtract,
-        Token::Multiply => Multiply,
-        Token::Remainder => Remainder,
-        Token::Divide => Divide,
-        _ => panic!("Syntax Error: Expected binary operator, got {:?}", tok),
+        Token::Plus => Ok(Add),
+        Token::Minus => Ok(Subtract),
+        Token::Multiply => Ok(Multiply),
+        Token::Remainder => Ok(Remainder),
+        Token::Divide => Ok(Divide),
+        Token::And => Ok(And),
+        Token::Or => Ok(Or),
+        Token::Equal => Ok(Equal),
+        Token::NotEqual => Ok(NotEqual),
+        Token::LessThan => Ok(LessThan),
+        Token::GreaterThan => Ok(GreaterThan),
+        Token::LessOrEqual => Ok(LessOrEqual),
+        Token::GreaterOrEqual => Ok(GreaterOrEqual),
+        _ => Err(()),
     }
 }
 

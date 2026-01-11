@@ -23,6 +23,20 @@ pub enum Token {
     Divide,
     Remainder,
 
+    //logical operators
+    Not,
+    And,
+    Or,
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    LessOrEqual,
+    GreaterOrEqual,
+
+    // =
+    Assign,
+
     EOF,
 }
 
@@ -61,15 +75,11 @@ pub fn lex_string(input: String) -> Queue<Token> {
 
     while !input.is_empty() {
         consume_while(&mut input, |c| matches!(c, ' ' | '\t' | '\n'));
-
         if input.is_empty() {
             break;
         }
 
-        let c = match input.peek() {
-            Ok(c) => c,
-            Err(_) => break,
-        };
+        let c = input.peek().unwrap();
 
         match c {
             '/' => {
@@ -79,13 +89,9 @@ pub fn lex_string(input: String) -> Queue<Token> {
                 }
             }
 
-            'a'..='z' | 'A'..='Z' | '_' => {
-                tokens.add(lex_identifier(&mut input));
-            }
+            'a'..='z' | 'A'..='Z' | '_' => tokens.add(lex_identifier(&mut input)),
 
-            '0'..='9' => {
-                tokens.add(lex_int(&mut input));
-            }
+            '0'..='9' => tokens.add(lex_int(&mut input)),
 
             '(' => {
                 st(Token::OpenParen, &mut input, &mut tokens);
@@ -105,41 +111,71 @@ pub fn lex_string(input: String) -> Queue<Token> {
             '~' => {
                 st(Token::Tilde, &mut input, &mut tokens);
             }
-            '-' => {
-                if input.is_there(1, '-') {
-                    input.consume();
-                    input.consume();
-                    tokens.add(Token::Decrement);
-                } else {
-                    input.consume();
-                    tokens.add(Token::Minus);
-                }
+            '=' => {
+                st(Token::Assign, &mut input, &mut tokens);
             }
 
-            '+' => {
-                st(Token::Plus, &mut input, &mut tokens);
-            }
-            '*' => {
-                st(Token::Multiply, &mut input, &mut tokens);
-            }
-            '%' => {
-                st(Token::Remainder, &mut input, &mut tokens);
-            }
+            '-' => tok_alt(
+                &mut input,
+                &mut tokens,
+                &[("--", Token::Decrement), ("-", Token::Minus)],
+            ),
 
-            _ => {
-                panic!("Lexer error: unexpected character '{}'", c);
-            }
+            '+' => tok_alt(&mut input, &mut tokens, &[("+", Token::Plus)]),
+            '*' => tok_alt(&mut input, &mut tokens, &[("*", Token::Multiply)]),
+            '%' => tok_alt(&mut input, &mut tokens, &[("%", Token::Remainder)]),
+
+            '!' => tok_alt(
+                &mut input,
+                &mut tokens,
+                &[("!=", Token::NotEqual), ("!", Token::Not)],
+            ),
+
+            '<' => tok_alt(
+                &mut input,
+                &mut tokens,
+                &[("<=", Token::LessOrEqual), ("<", Token::LessThan)],
+            ),
+
+            '>' => tok_alt(
+                &mut input,
+                &mut tokens,
+                &[(">=", Token::GreaterOrEqual), (">", Token::GreaterThan)],
+            ),
+
+            '=' => tok_alt(&mut input, &mut tokens, &[("==", Token::Equal)]),
+
+            '|' => tok_alt(&mut input, &mut tokens, &[("||", Token::Or)]),
+
+            '&' => tok_alt(&mut input, &mut tokens, &[("&&", Token::And)]),
+
+            _ => panic!("Lexer error: unexpected character '{}'", c),
         }
     }
 
     tokens.add(Token::EOF);
-
     tokens
 }
 
 fn st(t: Token, input: &mut Queue<char>, tokens: &mut Queue<Token>) {
     input.consume();
     tokens.add(t);
+}
+
+fn tok_alt(input: &mut Queue<char>, tokens: &mut Queue<Token>, alts: &[(&str, Token)]) {
+    for (s, t) in alts {
+        if s.chars().enumerate().all(|(i, c)| input.is_there(i, c)) {
+            for _ in 0..s.len() {
+                input.consume();
+            }
+            tokens.add(t.clone());
+            return;
+        }
+    }
+    panic!(
+        "Lexer error: unexpected character '{}'",
+        input.peek().unwrap()
+    );
 }
 
 fn consume_while<F>(input: &mut Queue<char>, mut pred: F)

@@ -79,3 +79,13 @@ where
     }
     q
 }
+
+trait QueueExt {
+    fn starts_with(&self, s: &str) -> bool;
+}
+
+impl QueueExt for Queue<char> {
+    fn starts_with(&self, s: &str) -> bool {
+        s.chars().enumerate().all(|(i, c)| self.is_there(i, c))
+    }
+}

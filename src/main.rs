@@ -101,7 +101,10 @@ fn main() {
         .expect("Failed to execute program");
 
     match status.code() {
-        Some(code) => println!("Program exited with code: {}", code),
+        Some(code) => {
+            let signed = code as i8;
+            println!("Program result: {}", signed);
+        }
         None => println!("Program terminated by signal"),
     }
 }
