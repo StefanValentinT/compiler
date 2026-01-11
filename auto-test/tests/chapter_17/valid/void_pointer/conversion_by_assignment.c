@@ -1,13 +1,6 @@
 /* In conversion as if by assignment, we can implicitly convert between void *
  * and other pointer types. */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wincompatible-library-redeclaration"
-#else
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
-#endif
-#endif
 
 void *malloc(unsigned long size);
 void free(void *ptr);

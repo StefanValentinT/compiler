@@ -3,7 +3,6 @@
  * conflict
  */
 
-#include "../util.h"
 
 // define a function that returns a value
 // so we can't just constant fold everything away

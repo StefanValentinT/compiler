@@ -3,7 +3,6 @@
  * Test script validates that there are no spills.
  */
 
-#include "../util.h"
 
 int target(int one, int two, double one_d, double two_d, int three,
            double three_d) {

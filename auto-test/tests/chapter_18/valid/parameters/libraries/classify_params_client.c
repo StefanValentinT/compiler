@@ -3,7 +3,6 @@
  * Each test function takes only one argument.
  * */
 
-#include "classify_params.h"
 
 int main(void) {
     struct twelve_bytes s1 = {0, "lmnopqr"};

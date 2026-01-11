@@ -2,8 +2,6 @@
  * dbl_funcall_generates_args.c
  * */
 
-#include <stdio.h>
-#include <stdlib.h>
 
 // a and b should be 11 and 12
 int f(int a, int b) {

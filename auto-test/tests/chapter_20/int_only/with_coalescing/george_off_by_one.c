@@ -10,7 +10,6 @@
  * templates/chapter_20_templates/george_off_by_one.c.jinja.
  * */
 
-#include "../util.h"
 
 int glob = 0;
 

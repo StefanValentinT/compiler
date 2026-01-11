@@ -4,11 +4,6 @@
  * instead of copy-paste (ditto for other extra-credit constant-folding tests too!)
  */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wshift-count-overflow"
-#endif
-#endif
 
  // Similar to Chapter 16's compound_bitwise_ops_chars.c but modified to be
  // constant-foldable

@@ -1,9 +1,6 @@
 // Test that we correctly get size of compound expressions (and don't evaluate
 // them)
 
-#if defined SUPPRESS_WARNINGS && defined __clang__
-#pragma clang diagnostic ignored "-Wunevaluated-expression"
-#endif
 
 int main(void) {
     long long_arr[2] = {1, 2};

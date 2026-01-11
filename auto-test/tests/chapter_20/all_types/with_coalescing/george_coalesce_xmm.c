@@ -7,7 +7,6 @@
  * This test was generated from templates/chapter_20_templates/george_coalesce.c.jinja.
  * */
 
-#include "../util.h"
 
 double glob = 4.0;
 

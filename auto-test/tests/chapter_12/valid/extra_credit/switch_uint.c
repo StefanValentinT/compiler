@@ -1,10 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wswitch"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 int switch_on_uint(unsigned int ui) {
     switch (ui) {

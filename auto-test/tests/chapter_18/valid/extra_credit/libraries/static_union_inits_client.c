@@ -1,6 +1,5 @@
 // Test initialization of static unions; make sure uninitialized
 // unions/sub-objects are initialized to zero
-#include "static_union_inits.h"
 
 // Test case 1 - simple union w/ scalar elements
 

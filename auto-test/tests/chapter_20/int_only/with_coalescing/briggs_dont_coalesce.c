@@ -4,7 +4,6 @@
  * sure there are no spills.
  * */
 
-#include "../util.h"
 
 int glob = 5;
 

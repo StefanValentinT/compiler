@@ -5,14 +5,7 @@
  * - arrays of structs, structs containing arrays
  * */
 
-#include "nested_auto_struct_initializers.h"
 
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#endif
-#endif
 
 // case 1: fully initialized struct (include some implicit conversions while
 // we're at it)

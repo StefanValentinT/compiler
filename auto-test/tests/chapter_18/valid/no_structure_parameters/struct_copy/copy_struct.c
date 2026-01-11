@@ -3,11 +3,7 @@
  * Include static and automatic objects and result of conditional expressions.
  * */
 
-#include "structs.h"
 
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
 
 // test 1: copy one struct with auto storage duration to another
 int test_auto(void) {

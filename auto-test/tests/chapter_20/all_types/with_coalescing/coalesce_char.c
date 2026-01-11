@@ -2,7 +2,6 @@
  * spills and no mov instructions between registers.
  * */
 
-#include "../util.h"
 
 char glob_a;
 char glob_b;

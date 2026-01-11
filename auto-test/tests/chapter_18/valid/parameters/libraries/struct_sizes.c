@@ -2,7 +2,6 @@
 /* Test that we can pass static and automatic structs of every size between 1 and 24 bytes.
  * Pass each size both in a register (when possible) and on the stack. */
 
-#include "struct_sizes.h"
 int memcmp(void *s1, void *s2, unsigned long n);
 
 // Pass sizes 1 - 6 in registers, remainders on the stack

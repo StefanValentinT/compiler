@@ -1,4 +1,3 @@
-#include "union_lib.h"
 
 int test_one_double(union one_double u) {
     return (u.d1 == -2.345e6 && u.d2 == -2.345e6);

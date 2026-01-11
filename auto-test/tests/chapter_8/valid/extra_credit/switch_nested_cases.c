@@ -1,9 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifndef __clang__
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#pragma GCC diagnostic ignored "-Wswitch-unreachable"
-#endif
-#endif
 // a switch statement may jump into the middle of other control flow constructs
 
 int main(void) {

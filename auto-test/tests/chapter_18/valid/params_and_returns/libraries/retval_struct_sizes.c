@@ -1,6 +1,5 @@
 
 /* Test that we can return structs of every size between 1 and 24 bytes. */
-#include "retval_struct_sizes.h"
 
 struct bytesize1 fun1(void) {
     return globvar_1;

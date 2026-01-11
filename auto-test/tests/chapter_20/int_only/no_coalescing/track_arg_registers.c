@@ -7,7 +7,6 @@
  * able to allocate them, resulting in spills.
  * */
 
-#include "../util.h"
 
 int glob1;
 int glob2;

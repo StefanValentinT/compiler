@@ -2,13 +2,6 @@
  * long and unsigned integers, and characters.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 int target(void) {
     // propagate doubles

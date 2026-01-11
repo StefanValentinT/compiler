@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 
 int callee(double a, double b, double c) {
     if (a != 12) {

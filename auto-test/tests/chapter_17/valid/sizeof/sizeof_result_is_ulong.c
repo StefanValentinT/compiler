@@ -1,8 +1,5 @@
 /* Test that sizeof expression results in an unsigned long */
 
-#if defined SUPPRESS_WARNINGS && !defined __clang__
-#pragma GCC diagnostic ignored "-Wtype-limits"
-#endif
 
 int main(void) {
 

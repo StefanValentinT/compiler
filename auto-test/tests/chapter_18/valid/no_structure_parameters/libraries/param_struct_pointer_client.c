@@ -1,6 +1,5 @@
 /* Test passing struct pointers as function parameters */
 
-#include "param_struct_pointer.h"
 
 int main(void) {
     struct outer s = {1, 2, {3.0, 4}};

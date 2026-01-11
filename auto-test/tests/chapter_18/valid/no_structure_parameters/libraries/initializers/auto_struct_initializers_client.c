@@ -6,11 +6,7 @@
  * - string literals as pointer and array initializers
  * */
 
-#include "auto_struct_initializers.h"
 
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
 
 double get_double(void) {
     return 2e12;

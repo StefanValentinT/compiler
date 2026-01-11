@@ -5,7 +5,6 @@
  * This test program is generated from templates/chapter_20_templates/reg_live_at_exit.c.jinja
  * */
 
-#include "../util.h"
 
 int glob = 10;
 int glob2 = 0;

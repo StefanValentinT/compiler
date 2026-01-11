@@ -1,6 +1,5 @@
 /* Test returning unions (and structs containing unions) according to the ABI */
 
-#include "union_lib.h"
 
 union one_double return_one_double(void) {
     union one_double result = { 245.5 };

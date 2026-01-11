@@ -6,7 +6,6 @@
  * This test program is generated from templates/chapter_20_templates/bin_uses_operands.c.jinja
  */
 
-#include "../util.h"
 
 // recognize that addl uses its source
 int src_test(int arg) {

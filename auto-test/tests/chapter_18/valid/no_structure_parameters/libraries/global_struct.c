@@ -1,6 +1,5 @@
 /* Basic test that we can access a global struct in multiple translation units
  * */
-#include "global_struct.h"
 
 void update_struct(void) {
     global.arr[1] = global.arr[0] * 2;

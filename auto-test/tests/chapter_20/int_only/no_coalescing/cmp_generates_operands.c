@@ -3,7 +3,6 @@
  * Note: this only works as intended after we've implemented register
  * coalescing.
  * */
-#include "../util.h"
 
 int glob = 10;
 int glob2 = 20;

@@ -5,7 +5,6 @@
  * - arrays of structs, structs containing arrays
  * */
 
-#include "nested_auto_struct_initializers.h"
 
 int validate_full_initialization(struct outer *ptr) {
     if (ptr->one_l != -200l || ptr->two_struct.one_i != -171 ||

@@ -7,7 +7,6 @@
  * Look for: no spills
  */
 
-#include "../util.h"
 
 int glob1 = 1;
 int glob2 = 2;

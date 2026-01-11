@@ -1,6 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
 static int x = 10;
 

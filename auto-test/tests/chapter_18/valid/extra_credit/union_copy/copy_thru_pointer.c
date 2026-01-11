@@ -1,14 +1,6 @@
 // Test copying whole structs/unions through pointers (incl. to/from array members)
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wincompatible-library-redeclaration"
-#else
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
-#endif
-#endif
 
-#include "../union_types.h"
 
 int strcmp(char* s1, char* s2);
 

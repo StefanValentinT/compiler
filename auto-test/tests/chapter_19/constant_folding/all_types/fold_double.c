@@ -2,14 +2,6 @@
  * correctly rounded.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-range"
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 double target_add(void) {
     // Because 1.2345e60 is so large, adding one to it doesn't change its value

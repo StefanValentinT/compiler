@@ -2,13 +2,6 @@
  * and between void * and integer types
  */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wincompatible-library-redeclaration"
-#else
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
-#endif
-#endif
 
 void *malloc(unsigned long size);
 void free(void *ptr);

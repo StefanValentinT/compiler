@@ -2,7 +2,6 @@
  * and using struct pointers returned from functions
  * */
 
-#include "return_struct_pointer.h"
 
 // case 1: use a struct pointer returned from a function call
 int test_get_struct_ptr(void) {

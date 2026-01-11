@@ -4,7 +4,6 @@
  * behavior, don't inspect assembly.
  * */
 
-#include "../util.h"
 
 long one = 1l;
 

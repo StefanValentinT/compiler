@@ -4,7 +4,6 @@
  * Note: only works as intended after we've implemented register coalescing.
  * */
 
-#include "../util.h"
 
 int arr[2] = {1, 2};
 long arr2[2] = {3, 4};

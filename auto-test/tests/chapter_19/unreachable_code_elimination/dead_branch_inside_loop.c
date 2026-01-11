@@ -1,9 +1,6 @@
 /* Test that we can eliminate dead code inside of a larger, non-dead
  * control structure
  * */
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-#endif
 
 int callee(void) {
     return 1 / 0;

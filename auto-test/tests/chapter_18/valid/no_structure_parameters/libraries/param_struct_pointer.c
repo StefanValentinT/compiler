@@ -1,6 +1,5 @@
 /* Test passing struct pointers as function parameters */
 
-#include "param_struct_pointer.h"
 
 int access_members_through_pointer(struct outer *ptr, int expected_a,
                                    int expected_b, double expected_d,

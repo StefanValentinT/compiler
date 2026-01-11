@@ -7,7 +7,6 @@
  * resulting in more memory accesses overall.
  */
 
-#include "../util.h"
 
 int target(void) {
 

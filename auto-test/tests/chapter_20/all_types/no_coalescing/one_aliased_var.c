@@ -4,7 +4,6 @@
  * but should be able to store all other pseudos in registers.
  */
 
-#include "../util.h"
 
 void increment(int *ptr) {
     *ptr = *ptr + 1;

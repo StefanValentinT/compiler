@@ -1,6 +1,5 @@
 /* Test returning unions (and structs containing unions) according to the ABI */
 
-#include "union_lib.h"
 
 int main(void) {
 

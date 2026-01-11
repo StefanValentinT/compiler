@@ -1,10 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wswitch"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 // Make sure we promote the controlling condition in a switch statement from
 // character type to int

@@ -1,8 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wshift-count-overflow"
-#endif
-#endif
 // Test bitwise compound assignment operators with character types
 
 int main(void) {

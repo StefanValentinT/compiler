@@ -1,12 +1,5 @@
 /* Test our handling of positive and negative infinity */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-range"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 /* This value should be rounded to infinity */
 double inf = 2e308;

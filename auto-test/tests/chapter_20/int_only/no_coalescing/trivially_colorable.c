@@ -2,7 +2,6 @@
  * The test script validates that we don't spill any pseudoregisters in target.
  */
 
-#include "../util.h"
 
 int target(int one, int two) {
     // perform a few calculations that make one, two, three, four, and five

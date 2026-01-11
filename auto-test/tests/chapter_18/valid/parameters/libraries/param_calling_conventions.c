@@ -1,7 +1,6 @@
 /* Test that we can pass a mix of struct and non-struct arguments according to
  * the ABI */
 
-#include "param_calling_conventions.h"
 
 // all arguments fit in registers
 int pass_small_structs(struct two_xmm two_xmm_struct, struct one_int int_struct,

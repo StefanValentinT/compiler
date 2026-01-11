@@ -1,10 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 // Test that we can use character constants in bitwise operations
 int main(void) {

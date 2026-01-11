@@ -1,5 +1,4 @@
 /* Test that we return a wide range of struct types according to the ABI */
-#include "return_calling_conventions.h"
 
 int main(void) {
     struct one_int_exactly one_long = {567890l};

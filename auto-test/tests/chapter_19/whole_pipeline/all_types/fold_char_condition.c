@@ -2,13 +2,6 @@
  * operands. (We don't test constant-folding of other operations on char because
  * they get promoted to int first.)
  * */
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 int putchar(int c);
 
 int target_not_char(void) {

@@ -3,13 +3,6 @@
  * we hadn't implemented copy propagation yet.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 /* Sign extension */
 

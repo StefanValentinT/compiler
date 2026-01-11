@@ -7,7 +7,6 @@
  * NOTE: only works as intended once we've implemented coalescing.
  * */
 
-#include "../util.h"
 
 struct s {
     long l;    // RDI

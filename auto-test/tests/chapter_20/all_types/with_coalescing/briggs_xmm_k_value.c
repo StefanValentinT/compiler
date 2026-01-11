@@ -5,7 +5,6 @@
  * where both operands are XMM registers.
  * */
 
-#include "../util.h"
 
 // store some initial values in global variables
 // to prevent constant folding

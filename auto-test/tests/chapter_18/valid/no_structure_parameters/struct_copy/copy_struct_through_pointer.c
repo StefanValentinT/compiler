@@ -4,7 +4,6 @@
  * with a mix of static and automatic structs
  * */
 
-#include "structs.h"
 
 // case 1: *x = y
 int test_copy_to_pointer(void) {

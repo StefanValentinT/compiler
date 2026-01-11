@@ -1,6 +1,5 @@
 /* Basic test that we can access a global struct in multiple translation units
  * */
-#include "global_struct.h"
 
 struct s global = {1, {2, 3}, 4.0};
 struct outer global_outer = {5, {6, {7, 8}, 9.0}};

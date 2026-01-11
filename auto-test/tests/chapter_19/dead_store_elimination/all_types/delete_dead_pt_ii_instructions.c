@@ -2,10 +2,6 @@
  * from Part II when they're dead stores
  * */
 
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
 long l = 1l;
 int i = 2;

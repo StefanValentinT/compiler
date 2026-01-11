@@ -1,6 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
 int main(void) {
     unsigned int ui = -1u; // lower 32 bits set
     unsigned long ul = 9223372036854775808ul; // 2^63, only uppermost bit set

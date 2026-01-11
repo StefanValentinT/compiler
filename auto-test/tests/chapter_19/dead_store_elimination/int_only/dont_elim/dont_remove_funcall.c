@@ -1,9 +1,6 @@
 /* Test that we never optimize away function calls,
  * even if they're dead stores (i.e. update dead variables)
  * because they can have side effects */
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
 int putchar(int c);
 

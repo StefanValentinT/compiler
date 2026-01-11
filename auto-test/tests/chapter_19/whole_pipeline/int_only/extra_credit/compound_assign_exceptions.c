@@ -4,13 +4,6 @@
  * will never actually be executed.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wdivision-by-zero"
-#else
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-#endif
-#endif
 
 
 static int zero;

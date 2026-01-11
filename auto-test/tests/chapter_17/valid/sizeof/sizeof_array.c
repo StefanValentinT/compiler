@@ -1,9 +1,6 @@
 /* Test that arrays don't decay to pointers
  * when they're the operands of sizeof expression */
 
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wsizeof-array-argument"
-#endif
 
 unsigned long sizeof_adjusted_param(int arr[3]) {
     // this should return the size of arr's _adjusted_ type,

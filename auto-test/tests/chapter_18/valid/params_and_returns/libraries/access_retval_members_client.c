@@ -1,5 +1,4 @@
 /* Test for accessing the members in a return value of structure type */
-#include "access_retval_members.h"
 
 int main(void) {
     // get member in a non-nested struct

@@ -1,6 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
 /* Make sure we store a variable in a register if it's aliased in the
  * original program, but the aliasing gets optimized away.

@@ -1,11 +1,4 @@
 /* Test that we can propagate copies between char and signed char */
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconstant-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 int putchar(int c);  // from standard library
 

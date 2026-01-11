@@ -11,7 +11,6 @@
  * param-passing registers/push them onto the stack
  * */
 
-#include "../util.h"
 
 struct s1 {
     // XMM0

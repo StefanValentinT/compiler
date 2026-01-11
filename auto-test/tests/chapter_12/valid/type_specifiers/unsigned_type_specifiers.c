@@ -1,10 +1,5 @@
 /* Test out different ways to declare an unsigned int or long */
 
-#ifdef SUPPRESS_WARNINGS
-#ifndef __clang__
-#pragma GCC diagnostic ignored "-Wold-style-declaration"
-#endif
-#endif
 
 unsigned u;
 int unsigned u;

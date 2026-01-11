@@ -1,8 +1,6 @@
 // Helper functions for
 // tests/chapter_20/all_types/no_coalescing/mixed_type_arg_registers.c
 
-#include <stdio.h>
-#include <stdlib.h>
 
 struct s1 {
     // XMM0

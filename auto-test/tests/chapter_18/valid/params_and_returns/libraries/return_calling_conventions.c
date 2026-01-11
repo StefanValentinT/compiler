@@ -1,5 +1,4 @@
 /* Test that we return a wide range of struct types according to the ABI */
-#include "return_calling_conventions.h"
 
 struct one_int return_int_struct(void) {
     struct one_int retval = {1, 2};

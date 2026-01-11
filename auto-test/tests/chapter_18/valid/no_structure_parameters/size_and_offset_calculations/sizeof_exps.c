@@ -5,7 +5,6 @@
  * type
  * */
 
-#include "struct_sizes.h"
 
 struct twenty_bytes *get_twentybyte_ptr(void) {
     return 0;

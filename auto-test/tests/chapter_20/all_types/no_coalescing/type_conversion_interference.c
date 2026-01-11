@@ -4,7 +4,6 @@
  * we've implemented register coalescing.
  */
 
-#include "../util.h"
 
 int glob;
 

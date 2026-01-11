@@ -1,10 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wswitch"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 // Another test that we promote switch controlling condition to integer type;
 // make sure case statements are converted to int rather than char

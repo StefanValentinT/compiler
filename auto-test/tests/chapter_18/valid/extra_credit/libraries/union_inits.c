@@ -1,6 +1,5 @@
 // Test initialization of unions with both automatic and static storage duration
 
-#include "union_inits.h"
 
 int validate_simple(union simple* ptr) {
     return (ptr->d == 123.45);

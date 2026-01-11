@@ -1,6 +1,5 @@
 /* Test that we can pass a pointer to an array of structures as a parameter */
 
-#include "array_of_structs.h"
 
 static struct outer static_array[3] = {
     {0, {0, {0, 0}}}, {2, {3, {4, 5}}}, {4, {6, {8, 10}}}};

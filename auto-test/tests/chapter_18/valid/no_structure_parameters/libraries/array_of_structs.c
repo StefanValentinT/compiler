@@ -1,6 +1,5 @@
 /* Test that we can pass a pointer to an array of structures as a parameter */
 
-#include "array_of_structs.h"
 
 int validate_struct_array(struct outer *struct_array) {
     for (int i = 0; i < 3; i = i + 1) {

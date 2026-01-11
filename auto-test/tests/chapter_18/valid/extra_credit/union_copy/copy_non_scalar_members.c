@@ -1,6 +1,5 @@
 // Read and assign to non-scalar union members
 
-#include "../union_types.h"
 
 void* calloc(unsigned long nmemb, unsigned long size);
 

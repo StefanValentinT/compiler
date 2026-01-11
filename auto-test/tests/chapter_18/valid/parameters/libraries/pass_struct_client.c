@@ -2,7 +2,6 @@
  * but split into two translation units
  * */
 
-#include "pass_struct.h"
 
 int main(void) {
     struct pair arg = {1, 2};

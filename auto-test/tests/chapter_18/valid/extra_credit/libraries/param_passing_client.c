@@ -1,6 +1,5 @@
 /* Test passing union types along w/ other arguments according to ABI */
 
-#include "union_lib.h"
 
 int main(void) {
     // mix of unions, structs, and other args; we can pass the unions in registers

@@ -2,9 +2,6 @@
  * block has a predecessor; in other words, we're traversing the graph to find
  * reachable blocks, not just looking for blocks with no predecessor list.
  * */
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-#endif
 
 int callee(void) {
     return 1 / 0;

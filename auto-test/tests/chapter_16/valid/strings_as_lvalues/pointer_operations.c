@@ -2,9 +2,6 @@
  * including pointer arithmetic and subscripting.
  */
 
-#if defined SUPPRESS_WARNINGS && defined __clang__
-#pragma clang diagnostic ignored "-Wstring-plus-int"
-#endif
 
 
 int main(void) {

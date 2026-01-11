@@ -8,7 +8,6 @@
  * This test was generated from templates/chapter_20_templates/briggs_coalesce.c.jinja.
  * */
 
-#include "../util.h"
 
 int glob = 5;
 

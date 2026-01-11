@@ -1,9 +1,6 @@
 /* Test constant folding of JumpIfZero and JumpIfNotZero instructions
  * resulting from && and || operations.
  * */
-#if defined SUPPRESS_WARNINGS && defined __clang__
-#pragma clang diagnostic ignored "-Wconstant-logical-operand"
-#endif
 
 // We'll emit two TACKY instructions of the form
 // JumpIfZero(0, false_label)

@@ -2,9 +2,6 @@
  * we can eliminate the branch, then eliminate any updates to that variable,
  * because they'll all be dead stores
  * */
-#if defined SUPPRESS_WARNINGS && !defined __clang__
-#pragma GCC diagnostic ignored "-Wempty-body"
-#endif
 
 // flag is a global variable, not parameters
 // so we don't have any instructions setting up function parameters,

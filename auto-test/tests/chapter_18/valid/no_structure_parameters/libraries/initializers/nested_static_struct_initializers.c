@@ -4,7 +4,6 @@
  * - implicit conversion of scalar elements, array decay of string literals
  */
 
-#include "nested_static_struct_initializers.h"
 
 // structs defined in client but visible here
 // validation functions defined here

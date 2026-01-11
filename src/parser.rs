@@ -10,19 +10,34 @@ pub enum Program {
 
 #[derive(Debug)]
 pub enum FuncDef {
-    Function { name: String, body: Stmt },
+    Function { name: String, body: Vec<BlockItem> },
+}
+
+#[derive(Debug)]
+pub enum BlockItem {
+    S(Stmt),
+    D(Decl),
+}
+
+#[derive(Debug)]
+pub enum Decl {
+    Declaration { name: String, exp: Option<Expr> },
 }
 
 #[derive(Debug)]
 pub enum Stmt {
     Return(Expr),
+    Expression(Expr),
+    Null, //lone semicolon
 }
 
 #[derive(Debug, Clone)]
 pub enum Expr {
     Constant(i32),
+    Var(String),
     Unary(UnaryOp, Box<Expr>),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
+    Assignment(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Debug, Clone)]
@@ -64,36 +79,79 @@ fn parse_func_def(tokens: &mut Queue<Token>) -> FuncDef {
     };
     expect(Token::OpenParen, tokens);
 
-    let _type = match tokens.remove().unwrap() {
-        Token::Keyword(name) => name,
-        other => panic!(
-            "Syntax Error: Expected void (nothing else supported), got {:?}",
-            other
-        ),
-    };
+    match tokens.remove().unwrap() {
+        Token::Keyword(ref s) if s == "void" => {}
+        other => panic!("Syntax Error: Expected 'void', got {:?}", other),
+    }
 
     expect(Token::CloseParen, tokens);
     expect(Token::OpenBrace, tokens);
-    let body = parse_statement(tokens);
-    expect(Token::CloseBrace, tokens);
 
-    //Just one main func program now over
+    let mut body = Vec::new();
+    while let Ok(next) = tokens.peek() {
+        if next == Token::CloseBrace {
+            break;
+        }
+        body.push(parse_block_item(tokens));
+    }
+
+    expect(Token::CloseBrace, tokens);
     expect(Token::EOF, tokens);
 
     FuncDef::Function { name, body }
 }
 
-fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
-    expect(Token::Keyword("return".to_string()), tokens);
-    let expr = parse_expr(tokens, 0);
+fn parse_block_item(tokens: &mut Queue<Token>) -> BlockItem {
+    match tokens.peek().unwrap() {
+        Token::Keyword(ref s) if s == "int" => BlockItem::D(parse_declaration(tokens)),
+        _ => BlockItem::S(parse_statement(tokens)),
+    }
+}
+
+fn parse_declaration(tokens: &mut Queue<Token>) -> Decl {
+    expect(Token::Keyword("int".to_string()), tokens);
+
+    let name = match tokens.remove().unwrap() {
+        Token::Identifier(name) => name,
+        other => panic!("Syntax Error: Expected identifier, got {:?}", other),
+    };
+
+    let exp = if let Ok(Token::Assign) = tokens.peek() {
+        tokens.remove().unwrap();
+        Some(parse_expr(tokens, 0)) // ✅ CORRECT
+    } else {
+        None
+    };
+
     expect(Token::Semicolon, tokens);
-    Stmt::Return(expr)
+    Decl::Declaration { name, exp }
+}
+
+fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
+    match tokens.peek().unwrap() {
+        Token::Keyword(ref s) if s == "return" => {
+            tokens.remove().unwrap(); // consume 'return'
+            let expr = parse_expr(tokens, 0); // ✅ MUST BE 0
+            expect(Token::Semicolon, tokens);
+            Stmt::Return(expr)
+        }
+        Token::Semicolon => {
+            tokens.remove().unwrap();
+            Stmt::Null
+        }
+        _ => {
+            let expr = parse_expr(tokens, 0); // ✅ MUST BE 0
+            expect(Token::Semicolon, tokens);
+            Stmt::Expression(expr)
+        }
+    }
 }
 
 fn parse_factor(tokens: &mut Queue<Token>) -> Expr {
     let next_token = tokens.remove().unwrap();
     match next_token {
         Token::IntLiteral(val) => Expr::Constant(val),
+        Token::Identifier(name) => Expr::Var(name),
         Token::Tilde | Token::Minus | Token::Not => {
             let op = parse_unop(&next_token);
             let inner_expr = parse_factor(tokens);
@@ -104,7 +162,7 @@ fn parse_factor(tokens: &mut Queue<Token>) -> Expr {
             expect(Token::CloseParen, tokens);
             inner_exp
         }
-        _ => panic!("Malformed factor!"),
+        _ => panic!("Malformed factor: {:?}", next_token),
     }
 }
 
@@ -117,18 +175,25 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
             Err(_) => break,
         };
 
-        if !is_token_binop(&next_token) {
+        if !is_token_binop(&next_token) && next_token != Token::Assign {
             break;
         }
 
         let prec = precedence(&next_token);
+
         if prec < min_prec {
             break;
         }
 
-        let op = parse_binop(&tokens.remove().unwrap()).unwrap();
-        let right = parse_expr(tokens, prec);
-        left = Expr::Binary(op, Box::new(left), Box::new(right));
+        if next_token == Token::Assign {
+            tokens.remove().unwrap(); // consume '='
+            let right = parse_expr(tokens, prec); // right-associative
+            left = Expr::Assignment(Box::new(left), Box::new(right));
+        } else {
+            let op = parse_binop(&tokens.remove().unwrap()).unwrap();
+            let right = parse_expr(tokens, prec + 1); // left-associative
+            left = Expr::Binary(op, Box::new(left), Box::new(right));
+        }
     }
 
     left
@@ -141,20 +206,14 @@ fn is_token_binop(tok: &Token) -> bool {
 fn precedence(tok: &Token) -> i32 {
     use Token::*;
     match tok {
-        Minus => 45,
-        Plus => 45,
-        Multiply => 50,
-        Divide => 50,
-        Remainder => 50,
-        LessThan => 35,
-        LessOrEqual => 35,
-        GreaterThan => 35,
-        GreaterOrEqual => 35,
-        Equal => 30,
-        NotEqual => 30,
+        Multiply | Divide | Remainder => 50,
+        Plus | Minus => 45,
+        LessThan | LessOrEqual | GreaterThan | GreaterOrEqual => 35,
+        Equal | NotEqual => 30,
         And => 10,
         Or => 5,
-        _ => panic!("{:#?} has no precedence.", tok),
+        Assign => 1,
+        _ => panic!("{:?}  has no precedence.", tok),
     }
 }
 

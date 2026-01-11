@@ -3,7 +3,6 @@
  * Each test function takes only one argument.
  * */
 
-#include "classify_params.h"
 
 int test_twelve_bytes(struct twelve_bytes s) {
     if (s.i != 0 || strcmp(s.arr, "lmnopqr")) {

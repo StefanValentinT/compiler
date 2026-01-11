@@ -1,7 +1,6 @@
 /* Test passing union types along w/ other arguments according to ABI;
  * these functions just validate params passed by client
  */
-#include "union_lib.h"
 
 int pass_unions_and_structs(int i1, int i2, struct has_union one_gp_struct,
     double d1, union two_doubles two_xmm, union one_int one_gp, int i3, int i4,

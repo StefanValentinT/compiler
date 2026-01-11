@@ -1,4 +1,3 @@
-#include "union_lib.h"
 
 int main(void) {
 

@@ -5,11 +5,6 @@
  * a quick reference on arithmetic operations with -0.0
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#endif
-#endif
 
 double copysign(double x, double y);  // from standard library
 

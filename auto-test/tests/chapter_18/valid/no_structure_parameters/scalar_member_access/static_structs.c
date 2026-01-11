@@ -1,13 +1,6 @@
 // Make sure members in static structures retain their values
 // across multiple function invocations
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wincompatible-library-redeclaration"
-#else
-#pragma GCC diagnostic ignored "-Wbuiltin-declaration-mismatch"
-#endif
-#endif
 
 void *malloc(unsigned long size);
 int putchar(int ch);

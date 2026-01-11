@@ -6,7 +6,6 @@
  * This test program is generated from templates/chapter_20_templates/division_uses_ax.c.jinja
  */
 
-#include "../util.h"
 
 int main(void) {
     // we'll coalesce this into EAX because it's a function's return value,

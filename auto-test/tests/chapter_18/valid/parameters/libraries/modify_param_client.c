@@ -1,6 +1,5 @@
 /* Modify a parameter of structure type
  * */
-#include "modify_param.h"
 
 int main(void) {
     struct inner s_inner = {2.0, 3};

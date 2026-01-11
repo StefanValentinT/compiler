@@ -1,6 +1,3 @@
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
 
 // Test out bitwise operations on dereferenced pointers,
 // including ones that require implicit type conversions.

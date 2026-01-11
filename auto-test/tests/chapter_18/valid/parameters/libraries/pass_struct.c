@@ -2,7 +2,6 @@
  * but split into two translation units
  * */
 
-#include "pass_struct.h"
 
 int validate_struct_param(struct pair p) {
     if (p.x != 1 || p.y != 2) {

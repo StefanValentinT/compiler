@@ -6,13 +6,6 @@
  * because we don't inspect the assembly in this program.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 
 int main(void) {

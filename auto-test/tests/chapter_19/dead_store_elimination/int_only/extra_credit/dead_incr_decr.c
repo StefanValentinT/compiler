@@ -1,8 +1,5 @@
 /* Test that we delete ++/-- with dead variables */
 
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
 
 static int glob;
 

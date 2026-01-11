@@ -3,9 +3,6 @@
  * initialized with the set of all static variables.
  */
 
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
 
 int j = 3;
 int target(void) {

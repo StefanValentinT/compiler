@@ -1,7 +1,6 @@
 /* Verify that sizeof produces correct results for various structure types (and
  * arrays of structs) */
 
-#include "struct_sizes.h"
 
 int main(void) {
     // validate the size of every type in struct_sizes.h

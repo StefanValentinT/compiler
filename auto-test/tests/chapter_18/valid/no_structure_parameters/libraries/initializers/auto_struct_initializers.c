@@ -6,7 +6,6 @@
  * - string literals as pointer and array initializers
  * */
 
-#include "auto_struct_initializers.h"
 
 int validate_full_initialization(struct s *ptr) {
     if (strcmp(ptr->one_msg, "I'm a struct!") || ptr->two_arr[0] != 's' ||

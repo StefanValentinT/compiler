@@ -1,13 +1,6 @@
 // Test initialization of unions with automatic storage duration
 
-#include "union_inits.h"
 
-#ifdef SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wimplicit-const-int-float-conversion"
-#endif
-#endif
 
 int test_simple(void) {
     // initialize simple union w/ only scalar members

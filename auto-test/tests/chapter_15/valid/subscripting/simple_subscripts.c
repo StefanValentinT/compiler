@@ -1,8 +1,5 @@
 /* Test out simple cases involving constant indices and one-dimensional arrays */
 
-#if defined SUPPRESS_WARNINGS && !defined __clang__
-#pragma GCC diagnostic ignored "-Wtautological-compare"
-#endif
 
 int integer_types(unsigned *arr, unsigned expected) {
     // make sure our index can be any integer type

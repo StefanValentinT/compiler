@@ -2,8 +2,6 @@
 
 // okay to use standard library b/c we compile this file with
 // the system compiler, not the reader's compiler
-#include <stdio.h>
-#include <stdlib.h>
 
 /* The check_* functions return 0 on success,
  * print and exit with code -1 on failure.

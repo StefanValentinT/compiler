@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 
 struct s {
     double d1;

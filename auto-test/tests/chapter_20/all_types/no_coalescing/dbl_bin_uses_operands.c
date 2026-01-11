@@ -6,7 +6,6 @@
  * This test program is generated from templates/chapter_20_templates/bin_uses_operands.c.jinja
  */
 
-#include "../util.h"
 
 // recognize that addsd uses its source
 double src_test(double arg) {

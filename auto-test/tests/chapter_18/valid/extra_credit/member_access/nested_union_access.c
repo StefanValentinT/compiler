@@ -1,6 +1,5 @@
 /* Test access to nested union members through dot, arrow, and subscript operators */
 
-#include "../union_types.h"
 
 int test_auto_dot(void) {
     // Test nested access with . in unions/structs containing unions

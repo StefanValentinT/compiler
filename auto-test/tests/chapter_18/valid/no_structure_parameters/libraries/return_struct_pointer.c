@@ -2,7 +2,6 @@
  * and using struct pointers returned from functions
  * */
 
-#include "return_struct_pointer.h"
 
 // define some functions that return pointers to structs
 struct inner *make_struct_inner(int seed) {

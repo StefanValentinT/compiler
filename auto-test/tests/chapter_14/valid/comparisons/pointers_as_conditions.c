@@ -2,11 +2,6 @@
  * which implicitly compares them to zero
  */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#endif
-#endif
 
 
 long *get_null_pointer(void) {

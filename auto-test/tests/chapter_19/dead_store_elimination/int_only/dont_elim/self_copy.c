@@ -1,11 +1,6 @@
 /* Test that updating and using a value in the same instruction generates it
  * rather than killing it. */
 
-#if defined SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wself-assign"
-#endif
-#endif
 
 int target(int flag) {
     int i = 2;

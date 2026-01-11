@@ -6,7 +6,6 @@
  * as the return type.
  * */
 
-#include "../util.h"
 
 void *malloc(unsigned long size);
 

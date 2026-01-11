@@ -1,9 +1,6 @@
 /* Test that we can optimize away a for loop that will never execute;
  * initial expression still runs but post expression and body don't.
  * */
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-#endif
 
 int callee(void) {
     return 1 / 0;

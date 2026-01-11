@@ -111,9 +111,6 @@ pub fn lex_string(input: String) -> Queue<Token> {
             '~' => {
                 st(Token::Tilde, &mut input, &mut tokens);
             }
-            '=' => {
-                st(Token::Assign, &mut input, &mut tokens);
-            }
 
             '-' => tok_alt(
                 &mut input,
@@ -143,7 +140,11 @@ pub fn lex_string(input: String) -> Queue<Token> {
                 &[(">=", Token::GreaterOrEqual), (">", Token::GreaterThan)],
             ),
 
-            '=' => tok_alt(&mut input, &mut tokens, &[("==", Token::Equal)]),
+            '=' => tok_alt(
+                &mut input,
+                &mut tokens,
+                &[("==", Token::Equal), ("=", Token::Assign)],
+            ),
 
             '|' => tok_alt(&mut input, &mut tokens, &[("||", Token::Or)]),
 

@@ -1,5 +1,4 @@
 /* Test for accessing the members in a return value of structure type */
-#include "access_retval_members.h"
 
 struct inner return_small_struct(void) {
     struct inner i = {101, 102};

@@ -1,8 +1,5 @@
 /* Test that we correctly get the size of a range of expressions */
 
-#if defined SUPPRESS_WARNINGS && defined __clang__
-#pragma clang diagnostic ignored "-Wunevaluated-expression"
-#endif
 
 void *malloc(unsigned long size);
 void free(void *ptr);

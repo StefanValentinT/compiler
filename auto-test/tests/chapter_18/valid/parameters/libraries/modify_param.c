@@ -1,7 +1,6 @@
 /* Modify a parameter of structure type
  * */
 
-#include "modify_param.h"
 
 int modify_simple_struct(struct inner s) {
     // copy it

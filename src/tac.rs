@@ -98,7 +98,7 @@ fn funcdef_to_tac(func: FuncDef) -> TacFuncDef {
         FuncDef::Function { name, body } => {
             let mut instructions = Vec::new();
 
-            stmt_to_tac(body, &mut instructions);
+            //stmt_to_tac(body[0], &mut instructions);
 
             TacFuncDef::Function {
                 name,
@@ -114,6 +114,8 @@ fn stmt_to_tac(stmt: Stmt, instructions: &mut Vec<TacInstruction>) {
             let val = expr_to_tac(expr, instructions);
             instructions.push(TacInstruction::Return(val));
         }
+        Stmt::Expression(expr) => todo!(),
+        Stmt::Null => todo!(),
     }
 }
 
@@ -147,6 +149,8 @@ fn expr_to_tac(e: Expr, instructions: &mut Vec<TacInstruction>) -> TacVal {
                 dst
             }
         },
+        Expr::Var(_) => todo!(),
+        Expr::Assignment(expr, expr1) => todo!(),
     }
 }
 

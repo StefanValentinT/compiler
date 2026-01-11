@@ -1,5 +1,4 @@
 // Apply sizeof to a range of union types
-#include "../../no_structure_parameters/size_and_offset_calculations/struct_sizes.h"
 
 // size is 11 bytes; no padding
 union no_padding {

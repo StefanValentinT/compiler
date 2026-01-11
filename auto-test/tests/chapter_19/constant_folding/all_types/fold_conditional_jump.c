@@ -3,9 +3,6 @@
  * Identical to chapter_19/constant_folding/int_only/fold_conditional_jump.c
  * but with non-int operands
  * */
-#if defined SUPPRESS_WARNINGS && defined __clang__
-#pragma clang diagnostic ignored "-Wliteral-conversion"
-#endif
 
 // We'll emit two TACKY instructions of the form
 // JumpIfZero(0, false_label)

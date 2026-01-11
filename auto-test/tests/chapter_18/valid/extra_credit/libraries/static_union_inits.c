@@ -1,5 +1,4 @@
 // Test initialization of static unions; make sure uninitialized unions are initialized to zero
-#include "static_union_inits.h"
 
 
 int validate_simple(void) {

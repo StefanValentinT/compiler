@@ -2,7 +2,6 @@
  * (including nested members accessed through chains of . and -> operations)
  * and addresses of one-past-the-end of structs to validate trailing padding
  * */
-#include "struct_sizes.h"
 
 void *malloc(unsigned long size);
 

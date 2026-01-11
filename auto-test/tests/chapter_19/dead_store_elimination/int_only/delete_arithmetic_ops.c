@@ -3,9 +3,6 @@
  * Binary and Unary instructions too.
  * */
 
-#if defined SUPPRESS_WARNINGS
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#endif
 
 int a = 1;
 int b = 2;

@@ -1,7 +1,6 @@
 /* Test that we can pass a mix of struct and non-struct arguments according to
  * the ABI */
 
-#include "param_calling_conventions.h"
 
 int main(void) {
     // define a bunch of structures

@@ -3,13 +3,6 @@
  * copy propagation.
  * */
 
-#ifdef SUPPRESS_WARNINGS
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wliteral-range"
-#else
-#pragma GCC diagnostic ignored "-Woverflow"
-#endif
-#endif
 
 double copysign(double x, double y);  // from standard library
 
