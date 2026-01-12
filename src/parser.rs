@@ -33,6 +33,11 @@ pub enum Decl {
 pub enum Stmt {
     Return(Expr),
     Expression(Expr),
+    If {
+        condition: Expr,
+        then_case: Box<Stmt>,
+        else_case: Option<Box<Stmt>>,
+    },
     Null, //lone semicolon
 }
 
@@ -43,6 +48,7 @@ pub enum Expr {
     Unary(UnaryOp, Box<Expr>),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
     Assignment(Box<Expr>, Box<Expr>),
+    Conditional(Box<Expr>, Box<Expr>, Box<Expr>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -119,77 +125,6 @@ fn parse_func_def(tokens: &mut Queue<Token>) -> FuncDef {
     FuncDef::Function { name, body }
 }
 
-fn variable_resolution_pass(things: Vec<BlockItem>) {
-    for t in things {
-        match t {
-            BlockItem::D(decl) => (),
-            _ => (),
-        }
-    }
-}
-
-fn resolve_decl(decl: Decl, variable_map: &mut HashMap<String, String>) -> Decl {
-    match decl {
-        Decl::Declaration {
-            name,
-            expr: mut init,
-        } => {
-            if variable_map.contains_key(&name) {
-                panic!("Duplicate variable declaration!");
-            }
-            let unique_name = make_temporary();
-            variable_map.insert(name, unique_name.clone());
-            let init = init.map(|expr| resolve_expr(expr, variable_map));
-
-            Decl::Declaration {
-                name: unique_name,
-                expr: init,
-            }
-        }
-        _ => unimplemented!(),
-    }
-}
-
-fn resolve_statement(stmt: Stmt, variable_map: &mut HashMap<String, String>) -> Stmt {
-    match stmt {
-        Stmt::Return(expr) => Stmt::Return(resolve_expr(expr, variable_map)),
-        Stmt::Expression(expr) => Stmt::Expression(resolve_expr(expr, variable_map)),
-        Stmt::Null => Stmt::Null,
-    }
-}
-
-fn resolve_expr(e: Expr, variable_map: &mut HashMap<String, String>) -> Expr {
-    match e {
-        Expr::Constant(_) => todo!(),
-        Expr::Var(v) => {
-            if let Some(unique_name) = variable_map.get(&v) {
-                Expr::Var(unique_name.clone())
-            } else {
-                panic!("Undeclared variable: {}", v);
-            }
-        }
-        Expr::Unary(op, expr) => {
-            let resolved_expr = resolve_expr(*expr, variable_map);
-            Expr::Unary(op, Box::new(resolved_expr))
-        }
-
-        Expr::Binary(op, left, right) => {
-            let left_resolved = resolve_expr(*left, variable_map);
-            let right_resolved = resolve_expr(*right, variable_map);
-            Expr::Binary(op, Box::new(left_resolved), Box::new(right_resolved))
-        }
-
-        Expr::Assignment(left, right) => match *left {
-            Expr::Var(_) => {
-                let left_resolved = resolve_expr(*left, variable_map);
-                let right_resolved = resolve_expr(*right, variable_map);
-                Expr::Assignment(Box::new(left_resolved), Box::new(right_resolved))
-            }
-            _ => panic!("Invalid lvalue! Assignment must be to a variable."),
-        },
-    }
-}
-
 fn parse_block_item(tokens: &mut Queue<Token>) -> BlockItem {
     match tokens.peek().unwrap() {
         Token::Keyword(ref s) if s == "int" => BlockItem::D(parse_declaration(tokens)),
@@ -218,14 +153,34 @@ fn parse_declaration(tokens: &mut Queue<Token>) -> Decl {
 
 fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
     match tokens.peek().unwrap() {
-        Token::Keyword(ref s) if s == "return" => {
-            tokens.remove().unwrap();
-            let expr = parse_expr(tokens, 0);
-            expect(Token::Semicolon, tokens);
-            Stmt::Return(expr)
-        }
+        Token::Keyword(ref s) => match s.as_str() {
+            "return" => {
+                tokens.consume();
+                let expr = parse_expr(tokens, 0);
+                expect(Token::Semicolon, tokens);
+                Stmt::Return(expr)
+            }
+            "if" => {
+                tokens.consume();
+                expect(Token::OpenParen, tokens);
+                let condition = parse_expr(tokens, 0);
+                expect(Token::CloseParen, tokens);
+                let then_case = Box::new(parse_statement(tokens));
+                let mut else_case = None;
+                if tokens.peek().unwrap() == Token::Keyword("else".to_string()) {
+                    tokens.consume();
+                    else_case = Some(Box::new(parse_statement(tokens)));
+                }
+                Stmt::If {
+                    condition,
+                    then_case,
+                    else_case,
+                }
+            }
+            _ => panic!("Expected keyword, got {}", s),
+        },
         Token::Semicolon => {
-            tokens.remove().unwrap();
+            tokens.consume();
             Stmt::Null
         }
         _ => {
@@ -264,28 +219,47 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
             Err(_) => break,
         };
 
-        if !is_token_binop(&next_token) && next_token != Token::Assign {
+        if !has_precedence(&next_token) {
             break;
         }
 
         let prec = precedence(&next_token);
-
         if prec < min_prec {
             break;
         }
 
-        if next_token == Token::Assign {
-            tokens.remove().unwrap();
-            let right = parse_expr(tokens, prec);
-            left = Expr::Assignment(Box::new(left), Box::new(right));
-        } else {
-            let op = parse_binop(&tokens.remove().unwrap()).unwrap();
-            let right = parse_expr(tokens, prec + 1);
-            left = Expr::Binary(op, Box::new(left), Box::new(right));
+        match next_token {
+            Token::Assign => {
+                tokens.consume();
+                let right = parse_expr(tokens, prec);
+                left = Expr::Assignment(Box::new(left), Box::new(right));
+            }
+            Token::QuestionMark => {
+                let middle = parse_conditional_middle(tokens);
+                let right = parse_expr(tokens, precedence(&Token::QuestionMark));
+                left = Expr::Conditional(Box::new(left), Box::new(middle), Box::new(right));
+            }
+
+            _ => {
+                let op = parse_binop(&tokens.remove().unwrap()).unwrap();
+                let right = parse_expr(tokens, prec + 1);
+                left = Expr::Binary(op, Box::new(left), Box::new(right));
+            }
         }
     }
 
     left
+}
+
+fn parse_conditional_middle(tokens: &mut Queue<Token>) -> Expr {
+    expect(Token::QuestionMark, tokens);
+    let middle = parse_expr(tokens, 0);
+    expect(Token::Colon, tokens);
+    middle
+}
+
+fn has_precedence(tok: &Token) -> bool {
+    is_token_binop(tok) || *tok == Token::Assign || *tok == Token::QuestionMark
 }
 
 fn is_token_binop(tok: &Token) -> bool {
@@ -301,6 +275,7 @@ fn precedence(tok: &Token) -> i32 {
         Equal | NotEqual => 30,
         And => 10,
         Or => 5,
+        QuestionMark => 3,
         Assign => 1,
         _ => panic!("{:?}  has no precedence.", tok),
     }

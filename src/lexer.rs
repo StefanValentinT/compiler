@@ -37,15 +37,13 @@ pub enum Token {
     // =
     Assign,
 
+    QuestionMark,
+    Colon,
+
     EOF,
 }
 
-const KEYWORDS: [&str; 32] = [
-    "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else",
-    "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "restrict", "return",
-    "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned",
-    "void", "while",
-];
+const KEYWORDS: [&str; 5] = ["int", "void", "return", "if", "else"];
 
 fn is_boundary(c: char) -> bool {
     matches!(
@@ -110,6 +108,12 @@ pub fn lex_string(input: String) -> Queue<Token> {
             }
             '~' => {
                 st(Token::Tilde, &mut input, &mut tokens);
+            }
+            '?' => {
+                st(Token::QuestionMark, &mut input, &mut tokens);
+            }
+            ':' => {
+                st(Token::Colon, &mut input, &mut tokens);
             }
 
             '-' => tok_alt(

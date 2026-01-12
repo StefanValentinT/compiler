@@ -105,7 +105,7 @@ fn funcdef_to_tac(func: FuncDef) -> TacFuncDef {
                             let rhs = expr_to_tac(initial_value, &mut instructions);
                             instructions.push(TacInstruction::Copy {
                                 src: rhs,
-                                dest: TacVal::Var(name), 
+                                dest: TacVal::Var(name),
                             });
                         }
 
@@ -113,6 +113,8 @@ fn funcdef_to_tac(func: FuncDef) -> TacFuncDef {
                     },
                 }
             }
+
+            instructions.push(TacInstruction::Return(TacVal::Constant(0)));
 
             TacFuncDef::Function {
                 name,
@@ -128,8 +130,45 @@ fn stmt_to_tac(stmt: Stmt, instructions: &mut Vec<TacInstruction>) {
             let val = expr_to_tac(expr, instructions);
             instructions.push(TacInstruction::Return(val));
         }
-        Stmt::Expression(expr) => todo!(),
-        Stmt::Null => todo!(),
+        Stmt::Expression(expr) => {
+            expr_to_tac(expr, instructions);
+        }
+        Stmt::Null => (),
+        Stmt::If {
+            condition,
+            then_case,
+            else_case,
+        } => {
+            let cond_val = expr_to_tac(condition, instructions);
+            let end_label = format!("if_end{}", next_number());
+
+            match else_case {
+                Some(else_stmt) => {
+                    let else_label = format!("if_else{}", next_number());
+                    instructions.push(TacInstruction::JumpIfZero {
+                        condition: cond_val,
+                        target: else_label.clone(),
+                    });
+
+                    stmt_to_tac(*then_case, instructions);
+                    instructions.push(TacInstruction::Jump {
+                        target: end_label.clone(),
+                    });
+                    instructions.push(TacInstruction::Label(else_label));
+                    stmt_to_tac(*else_stmt, instructions);
+
+                    instructions.push(TacInstruction::Label(end_label));
+                }
+                None => {
+                    instructions.push(TacInstruction::JumpIfZero {
+                        condition: cond_val,
+                        target: end_label.clone(),
+                    });
+                    stmt_to_tac(*then_case, instructions);
+                    instructions.push(TacInstruction::Label(end_label));
+                }
+            }
+        }
     }
 }
 
@@ -175,6 +214,39 @@ fn expr_to_tac(e: Expr, instructions: &mut Vec<TacInstruction>) -> TacVal {
             }
             _ => panic!("Invalid lvalue in assignment!"),
         },
+        Expr::Conditional(condition, expr1, expr2) => {
+            let result_name = make_temporary();
+            let result = TacVal::Var(result_name.clone());
+
+            let cond_val = expr_to_tac(*condition, instructions);
+            let else_label = format!("cond_else{}", next_number());
+            let end_label = format!("cond_end{}", next_number());
+
+            instructions.push(TacInstruction::JumpIfZero {
+                condition: cond_val,
+                target: else_label.clone(),
+            });
+
+            let v1 = expr_to_tac((*expr1).clone(), instructions);
+            instructions.push(TacInstruction::Copy {
+                src: v1,
+                dest: result.clone(),
+            });
+            instructions.push(TacInstruction::Jump {
+                target: end_label.clone(),
+            });
+
+            instructions.push(TacInstruction::Label(else_label));
+            let v2 = expr_to_tac((*expr2).clone(), instructions);
+            instructions.push(TacInstruction::Copy {
+                src: v2,
+                dest: result.clone(),
+            });
+
+            instructions.push(TacInstruction::Label(end_label));
+
+            result
+        }
     }
 }
 
@@ -237,7 +309,6 @@ fn short_circuit_logic(
                 target: true_label.clone(),
             });
 
-            // both zero
             instructions.push(TacInstruction::Copy {
                 src: TacVal::Constant(0),
                 dest: result.clone(),

@@ -1,5 +1,6 @@
 int main(void) {
-    int first_variable = 1;
-    int second_variable = 2;
-    return first_variable + second_variable;
+    int a = 2;
+    int b = 3;
+    int c =  a+b > 4 ? 2 : 3;
+    return c+ b;
 }

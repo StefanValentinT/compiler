@@ -217,6 +217,9 @@ fn convert_func(func: TacFuncDef) -> AsmFuncDef {
 
             convert_instr(body, &mut instructions);
 
+            instructions.push(AsmInstruction::Label("__func_exit".into()));
+            instructions.push(AsmInstruction::Ret);
+
             AsmFuncDef::Function { name, instructions }
         }
     }
@@ -231,8 +234,9 @@ fn convert_instr(tac_instructions: Vec<TacInstruction>, instructions: &mut Vec<A
                     src: tac_op_to_asm(val),
                     dest: AsmOperand::Reg(AsmReg::Ax),
                 },
-                Ret,
+                Jmp("__func_exit".to_string()),
             ],
+
             TacInstruction::Unary { op, src, dest } => {
                 let asm_src = tac_op_to_asm(src);
                 let asm_dest = tac_op_to_asm(dest);
@@ -310,7 +314,7 @@ fn convert_instr(tac_instructions: Vec<TacInstruction>, instructions: &mut Vec<A
                     | TacBinaryOp::GreaterThan
                     | TacBinaryOp::GreaterOrEqual => {
                         vec![
-                            AsmInstruction::Cmp(asm_src2, asm_src1),
+                            AsmInstruction::Cmp(asm_src1, asm_src2),
                             AsmInstruction::Mov {
                                 src: AsmOperand::Imm(0),
                                 dest: asm_dest.clone(),

@@ -61,13 +61,31 @@ fn resolve_stmt(stmt: Stmt, variable_map: &mut HashMap<String, String>) -> Stmt 
         Stmt::Return(expr) => Stmt::Return(resolve_expr(expr, variable_map)),
         Stmt::Expression(expr) => Stmt::Expression(resolve_expr(expr, variable_map)),
         Stmt::Null => Stmt::Null,
+        Stmt::If {
+            condition,
+            then_case,
+            else_case,
+        } => {
+            if let Some(else_case) = else_case {
+                Stmt::If {
+                    condition: resolve_expr(condition, variable_map),
+                    then_case: Box::new(resolve_stmt(*then_case, variable_map)),
+                    else_case: Some(Box::new(resolve_stmt(*else_case, variable_map))),
+                }
+            } else {
+                Stmt::If {
+                    condition: resolve_expr(condition, variable_map),
+                    then_case: Box::new(resolve_stmt(*then_case, variable_map)),
+                    else_case: None,
+                }
+            }
+        }
     }
 }
 
 fn resolve_expr(expr: Expr, variable_map: &mut HashMap<String, String>) -> Expr {
     match expr {
         Expr::Constant(c) => Expr::Constant(c),
-
         Expr::Var(v) => {
             if let Some(unique_name) = variable_map.get(&v) {
                 Expr::Var(unique_name.clone())
@@ -75,18 +93,15 @@ fn resolve_expr(expr: Expr, variable_map: &mut HashMap<String, String>) -> Expr 
                 panic!("Undeclared variable: {}", v);
             }
         }
-
         Expr::Unary(op, inner) => {
             let resolved_inner = resolve_expr(*inner, variable_map);
             Expr::Unary(op, Box::new(resolved_inner))
         }
-
         Expr::Binary(op, left, right) => {
             let left_resolved = resolve_expr(*left, variable_map);
             let right_resolved = resolve_expr(*right, variable_map);
             Expr::Binary(op, Box::new(left_resolved), Box::new(right_resolved))
         }
-
         Expr::Assignment(left, right) => match *left {
             Expr::Var(_) => {
                 let left_resolved = resolve_expr(*left, variable_map);
@@ -95,5 +110,11 @@ fn resolve_expr(expr: Expr, variable_map: &mut HashMap<String, String>) -> Expr 
             }
             _ => panic!("Invalid lvalue in assignment!"),
         },
+        Expr::Conditional(expr, expr1, expr2) => {
+            let expr_r = resolve_expr(*expr, variable_map);
+            let expr1_r = resolve_expr(*expr1, variable_map);
+            let expr2_r = resolve_expr(*expr2, variable_map);
+            Expr::Conditional(Box::new(expr_r), Box::new(expr1_r), Box::new(expr2_r))
+        }
     }
 }

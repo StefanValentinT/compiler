@@ -1,22 +1,17 @@
 use crate::asm_gen::*;
-use std::{
-    fmt::Write,
-    process::{Command, exit},
-};
+use std::fmt::Write;
+use std::process::{Command, exit};
+
 
 pub fn emit_assembly(program: &AsmProgram) -> String {
-    let mut output = String::new();
-
-    match program {
-        AsmProgram::Program(func) => emit_function(func, &mut output),
-    }
-
-    output
+    let mut out = String::new();
+    let AsmProgram::Program(func) = program; 
+    emit_function(func, &mut out);
+    out
 }
 
 fn emit_function(func: &AsmFuncDef, out: &mut String) {
     let AsmFuncDef::Function { name, instructions } = func;
-
     let asm_name = if cfg!(target_os = "macos") {
         format!("_{}", name)
     } else {
@@ -29,215 +24,231 @@ fn emit_function(func: &AsmFuncDef, out: &mut String) {
     writeln!(out, "    stp x29, x30, [sp, #-16]!").unwrap();
     writeln!(out, "    mov x29, sp").unwrap();
 
-    let mut stack_alloc = 0;
+    let stack_size: i32 = instructions.iter().fold(0, |acc, instr| match instr {
+        AsmInstruction::AllocateStack(bytes) => acc + bytes,
+        _ => acc,
+    });
+    if stack_size > 0 {
+        writeln!(out, "    sub sp, sp, #{}", stack_size).unwrap();
+    }
 
     for instr in instructions {
-        if let AsmInstruction::AllocateStack(bytes) = instr {
-            stack_alloc = *bytes;
-        }
         emit_instruction(instr, out);
     }
 
-    if stack_alloc > 0 {
-        writeln!(out, "    add sp, sp, #{}", stack_alloc).unwrap();
+    if stack_size > 0 {
+        writeln!(out, "    add sp, sp, #{}", stack_size).unwrap();
     }
-
     writeln!(out, "    ldp x29, x30, [sp], #16").unwrap();
     writeln!(out, "    ret").unwrap();
 }
 
 fn emit_instruction(instr: &AsmInstruction, out: &mut String) {
     match instr {
-        AsmInstruction::AllocateStack(bytes) => {
-            let aligned = ((bytes + 15) / 16) * 16;
-            if aligned > 0 {
-                writeln!(out, "    sub sp, sp, #{}", aligned).unwrap();
+        AsmInstruction::AllocateStack(_) => {} // handled in emit_function
+
+        AsmInstruction::Mov { src, dest } => match (src, dest) {
+            (AsmOperand::Imm(val), AsmOperand::Reg(r)) => emit_load_imm32(out, reg_name(r), *val),
+            (AsmOperand::Imm(val), AsmOperand::Stack(off)) => {
+                emit_load_imm32(out, "w10", *val);
+                writeln!(out, "    str w10, [x29, #{}]", off).unwrap();
+            }
+            (AsmOperand::Reg(r), AsmOperand::Stack(off)) => {
+                writeln!(out, "    str {}, [x29, #{}]", reg_name(r), off).unwrap();
+            }
+            (AsmOperand::Stack(off), AsmOperand::Reg(r)) => {
+                writeln!(out, "    ldr {}, [x29, #{}]", reg_name(r), off).unwrap();
+            }
+            (AsmOperand::Reg(src), AsmOperand::Reg(dst)) => {
+                writeln!(out, "    mov {}, {}", reg_name(dst), reg_name(src)).unwrap();
+            }
+            (AsmOperand::Stack(src_off), AsmOperand::Stack(dst_off)) => {
+                writeln!(out, "    ldr w10, [x29, #{}]", src_off).unwrap();
+                writeln!(out, "    str w10, [x29, #{}]", dst_off).unwrap();
+            }
+            _ => panic!("Unsupported mov {:?} -> {:?}", src, dest),
+        },
+
+        AsmInstruction::Unary(op, operand) => {
+            let instr_str = match op {
+                AsmUnaryOp::Neg => "neg",
+                AsmUnaryOp::Not => "mvn",
+            };
+            match operand {
+                AsmOperand::Reg(r) => {
+                    writeln!(out, "    {} {}, {}", instr_str, reg_name(r), reg_name(r)).unwrap()
+                }
+                AsmOperand::Stack(off) => {
+                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
+                    writeln!(out, "    {} w10, w10", instr_str).unwrap();
+                    writeln!(out, "    str w10, [x29, #{}]", off).unwrap();
+                }
+                _ => panic!("Invalid unary operand"),
             }
         }
-        AsmInstruction::Mov { src, dest } => match (src, dest) {
-            (AsmOperand::Imm(val), AsmOperand::Stack(offset)) => {
-                writeln!(out, "    mov w10, #{}", val).unwrap();
-                writeln!(out, "    str w10, [x29, #{}]", offset).unwrap();
-            }
 
-            (AsmOperand::Imm(val), AsmOperand::Reg(dst_r)) => {
-                writeln!(out, "    mov {}, #{}", reg_name(dst_r), val).unwrap();
-            }
-
-            (AsmOperand::Reg(r), AsmOperand::Stack(offset)) => {
-                writeln!(out, "    str {}, [x29, #{}]", reg_name(r), offset).unwrap();
-            }
-
-            (AsmOperand::Stack(offset), AsmOperand::Reg(r)) => {
-                writeln!(out, "    ldr {}, [x29, #{}]", reg_name(r), offset).unwrap();
-            }
-
-            (AsmOperand::Reg(src_r), AsmOperand::Reg(dst_r)) => {
-                writeln!(out, "    mov {}, {}", reg_name(dst_r), reg_name(src_r)).unwrap();
-            }
-
-            _ => panic!("Unsupported mov combination: {:?} -> {:?}", src, dest),
-        },
-        AsmInstruction::Unary(op, operand) => match operand {
-            AsmOperand::Reg(r) => {
-                let instr = match op {
-                    AsmUnaryOp::Neg => "neg",
-                    AsmUnaryOp::Not => "mvn",
-                };
-                writeln!(out, "    {} {}, {}", instr, reg_name(r), reg_name(r)).unwrap();
-            }
-
-            AsmOperand::Stack(offset) => {
-                writeln!(out, "    ldr w10, [x29, #{}]", offset).unwrap();
-                let instr = match op {
-                    AsmUnaryOp::Neg => "neg",
-                    AsmUnaryOp::Not => "mvn",
-                };
-                writeln!(out, "    {} w10, w10", instr).unwrap();
-                writeln!(out, "    str w10, [x29, #{}]", offset).unwrap();
-            }
-
-            _ => panic!("Unary operand must be register or stack"),
-        },
-        AsmInstruction::Ret => (),
         AsmInstruction::Binary(op, src, dest) => {
-            let instr = match op {
+            let instr_str = match op {
                 AsmBinaryOp::Add => "add",
                 AsmBinaryOp::Subtract => "sub",
                 AsmBinaryOp::Multiply => "mul",
             };
-
-            match (src, dest) {
-                (AsmOperand::Reg(rs), AsmOperand::Reg(rd)) => {
-                    writeln!(
-                        out,
-                        "    {} {}, {}, {}",
-                        instr,
-                        reg_name(rd),
-                        reg_name(rd),
-                        reg_name(rs)
-                    )
-                    .unwrap();
-                }
-
-                (AsmOperand::Stack(src_off), AsmOperand::Stack(dst_off)) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", dst_off).unwrap();
-                    writeln!(out, "    ldr w11, [x29, #{}]", src_off).unwrap();
-
-                    writeln!(out, "    {} w10, w10, w11", instr).unwrap();
-
-                    writeln!(out, "    str w10, [x29, #{}]", dst_off).unwrap();
-                }
-
-                (src, AsmOperand::Stack(offset)) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", offset).unwrap();
-
-                    match src {
-                        AsmOperand::Reg(r) => {
-                            writeln!(out, "    {} w10, w10, {}", instr, reg_name(r)).unwrap();
-                        }
-                        AsmOperand::Imm(val) => {
-                            writeln!(out, "    mov w11, #{}", val).unwrap();
-                            writeln!(out, "    {} w10, w10, w11", instr).unwrap();
-                        }
-                        _ => panic!("Invalid binary source"),
+            match dest {
+                AsmOperand::Reg(rd) => match src {
+                    AsmOperand::Imm(val) => {
+                        emit_load_imm32(out, "w10", *val);
+                        writeln!(
+                            out,
+                            "    {} {}, {}, w10",
+                            instr_str,
+                            reg_name(rd),
+                            reg_name(rd)
+                        )
+                        .unwrap();
                     }
-
-                    writeln!(out, "    str w10, [x29, #{}]", offset).unwrap();
+                    AsmOperand::Stack(off) => {
+                        writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
+                        writeln!(
+                            out,
+                            "    {} {}, {}, w10",
+                            instr_str,
+                            reg_name(rd),
+                            reg_name(rd)
+                        )
+                        .unwrap();
+                    }
+                    AsmOperand::Reg(rs) => {
+                        writeln!(
+                            out,
+                            "    {} {}, {}, {}",
+                            instr_str,
+                            reg_name(rd),
+                            reg_name(rd),
+                            reg_name(rs)
+                        )
+                        .unwrap();
+                    }
+                    _ => panic!("Invalid binary src"),
+                },
+                AsmOperand::Stack(off) => {
+                    writeln!(out, "    ldr w11, [x29, #{}]", off).unwrap();
+                    match src {
+                        AsmOperand::Imm(val) => {
+                            emit_load_imm32(out, "w10", *val);
+                            writeln!(out, "    {} w11, w11, w10", instr_str).unwrap();
+                        }
+                        AsmOperand::Reg(rs) => {
+                            writeln!(out, "    {} w11, w11, {}", instr_str, reg_name(rs)).unwrap();
+                        }
+                        AsmOperand::Stack(src_off) => {
+                            writeln!(out, "    ldr w10, [x29, #{}]", src_off).unwrap();
+                            writeln!(out, "    {} w11, w11, w10", instr_str).unwrap();
+                        }
+                        _ => panic!("Invalid binary src"),
+                    }
+                    writeln!(out, "    str w11, [x29, #{}]", off).unwrap();
                 }
-
-                _ => panic!("Unsupported binary operands"),
+                _ => panic!("Invalid binary dest"),
             }
         }
-        AsmInstruction::Idiv(operand) => {
-            match operand {
-                AsmOperand::Reg(r) => {
-                    writeln!(out, "    sdiv w2, w0, {}", reg_name(r)).unwrap();
-                    writeln!(out, "    mul  w3, w2, {}", reg_name(r)).unwrap();
-                    writeln!(out, "    sub  w1, w0, w3").unwrap(); // remainder in w1
-                    writeln!(out, "    mov  w0, w2").unwrap(); // quotient in w0
-                }
-                AsmOperand::Stack(offset) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", offset).unwrap();
-                    writeln!(out, "    sdiv w2, w0, w10").unwrap();
-                    writeln!(out, "    mul  w3, w2, w10").unwrap();
-                    writeln!(out, "    sub  w1, w0, w3").unwrap();
-                    writeln!(out, "    mov  w0, w2").unwrap();
-                }
-                _ => panic!("Invalid idiv operand"),
-            }
-        }
 
-        AsmInstruction::Cdq => {}
         AsmInstruction::Cmp(lhs, rhs) => {
-            match (lhs, rhs) {
-                // reg, reg
-                (AsmOperand::Reg(l), AsmOperand::Reg(r)) => {
-                    writeln!(out, "    cmp {}, {}", reg_name(l), reg_name(r)).unwrap();
-                }
-
-                // reg, imm
-                (AsmOperand::Reg(l), AsmOperand::Imm(val)) => {
-                    writeln!(out, "    cmp {}, #{}", reg_name(l), val).unwrap();
-                }
-
-                // imm, reg
-                (AsmOperand::Imm(val), AsmOperand::Reg(r)) => {
-                    writeln!(out, "    cmp {}, #{}", reg_name(r), val).unwrap();
-                }
-
-                // stack, reg
-                (AsmOperand::Stack(off), AsmOperand::Reg(r)) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
-                    writeln!(out, "    cmp w10, {}", reg_name(r)).unwrap();
-                }
-
-                // reg, stack  <-- fix: load stack into scratch reg
-                (AsmOperand::Reg(r), AsmOperand::Stack(off)) => {
-                    writeln!(out, "    ldr w11, [x29, #{}]", off).unwrap(); // load memory
-                    writeln!(out, "    cmp {}, w11", reg_name(r)).unwrap(); // cmp reg vs reg
-                }
-
-                // stack, imm
-                (AsmOperand::Stack(off), AsmOperand::Imm(val)) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
-                    writeln!(out, "    cmp w10, #{}", val).unwrap();
-                }
-
-                // imm, stack
-                (AsmOperand::Imm(val), AsmOperand::Stack(off)) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
-                    writeln!(out, "    cmp w10, #{}", val).unwrap();
-                }
-
-                _ => panic!("Invalid cmp operands: {:?}, {:?}", lhs, rhs),
-            }
+            let (lhs_reg, rhs_reg) = load_cmp_operands(lhs, rhs, out);
+            writeln!(out, "    cmp {}, {}", lhs_reg, rhs_reg).unwrap();
         }
 
-        AsmInstruction::SetCC(cc, operand) => match operand {
+        AsmInstruction::SetCC(cc, op) => match op {
             AsmOperand::Reg(r) => {
-                writeln!(out, "    cset {}, {}", reg_name(r), cond_code_name(cc)).unwrap();
+                writeln!(out, "    cset {}, {}", reg_name(r), cond_code_name(cc)).unwrap()
             }
-
             AsmOperand::Stack(off) => {
                 writeln!(out, "    cset w10, {}", cond_code_name(cc)).unwrap();
                 writeln!(out, "    str w10, [x29, #{}]", off).unwrap();
             }
-
             _ => panic!("Invalid setcc operand"),
         },
 
-        AsmInstruction::Jmp(label) => {
-            writeln!(out, "    b {}", label).unwrap();
+        AsmInstruction::Idiv(op) => {
+            match op {
+                AsmOperand::Reg(divisor) => {
+                    writeln!(out, "    mov w11, w0").unwrap(); // copy dividend
+                    writeln!(out, "    sdiv w0, w11, {}", reg_name(divisor)).unwrap(); // quotient
+                    writeln!(out, "    mul w1, w0, {}", reg_name(divisor)).unwrap(); // q*divisor
+                    writeln!(out, "    sub w1, w11, w1").unwrap(); // remainder
+                }
+                AsmOperand::Stack(off) => {
+                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap(); // load divisor
+                    writeln!(out, "    mov w11, w0").unwrap(); // copy dividend
+                    writeln!(out, "    sdiv w0, w11, w10").unwrap(); // quotient
+                    writeln!(out, "    mul w1, w0, w10").unwrap(); // q*divisor
+                    writeln!(out, "    sub w1, w11, w1").unwrap(); // remainder
+                }
+                _ => panic!("Invalid Idiv operand"),
+            }
         }
 
+        AsmInstruction::Cdq => {
+            writeln!(out, "    sxtw x1, w0").unwrap(); // extend w0 -> x1:w0
+        }
+
+        AsmInstruction::Jmp(label) => writeln!(out, "    b {}", label).unwrap(),
         AsmInstruction::JmpCC(cc, label) => {
-            writeln!(out, "    b.{} {}", cond_code_name(cc), label).unwrap();
+            writeln!(out, "    b.{} {}", cond_code_name(cc), label).unwrap()
         }
+        AsmInstruction::Label(label) => writeln!(out, "{}:", label).unwrap(),
+        AsmInstruction::Ret => {}
+    }
+}
 
-        AsmInstruction::Label(name) => {
-            writeln!(out, "{}:", name).unwrap();
+fn load_cmp_operands<'a>(
+    lhs: &AsmOperand,
+    rhs: &AsmOperand,
+    out: &mut String,
+) -> (&'static str, &'static str) {
+    match (lhs, rhs) {
+        (AsmOperand::Reg(l), AsmOperand::Reg(r)) => (reg_name(l), reg_name(r)),
+        (AsmOperand::Reg(l), AsmOperand::Imm(v)) => {
+            emit_load_imm32(out, "w11", *v);
+            (reg_name(l), "w11")
         }
+        (AsmOperand::Imm(v), AsmOperand::Reg(r)) => {
+            emit_load_imm32(out, "w10", *v);
+            ("w10", reg_name(r))
+        }
+        (AsmOperand::Stack(l_off), AsmOperand::Reg(r)) => {
+            writeln!(out, "    ldr w10, [x29, #{}]", l_off).unwrap();
+            ("w10", reg_name(r))
+        }
+        (AsmOperand::Reg(l), AsmOperand::Stack(r_off)) => {
+            writeln!(out, "    ldr w11, [x29, #{}]", r_off).unwrap();
+            (reg_name(l), "w11")
+        }
+        (AsmOperand::Stack(l_off), AsmOperand::Imm(v)) => {
+            writeln!(out, "    ldr w10, [x29, #{}]", l_off).unwrap();
+            emit_load_imm32(out, "w11", *v);
+            ("w10", "w11")
+        }
+        (AsmOperand::Imm(v), AsmOperand::Stack(r_off)) => {
+            writeln!(out, "    ldr w11, [x29, #{}]", r_off).unwrap();
+            emit_load_imm32(out, "w10", *v);
+            ("w10", "w11")
+        }
+        (AsmOperand::Stack(l_off), AsmOperand::Stack(r_off)) => {
+            writeln!(out, "    ldr w10, [x29, #{}]", l_off).unwrap();
+            writeln!(out, "    ldr w11, [x29, #{}]", r_off).unwrap();
+            ("w10", "w11")
+        }
+        _ => panic!("Invalid cmp operands"),
+    }
+}
+
+fn emit_load_imm32(out: &mut String, reg: &str, val: i32) {
+    let val = val as u32;
+    let lo = val & 0xffff;
+    let hi = (val >> 16) & 0xffff;
+    writeln!(out, "    movz {}, #{}", reg, lo).unwrap();
+    if hi != 0 {
+        writeln!(out, "    movk {}, #{}, lsl #16", reg, hi).unwrap();
     }
 }
 
@@ -254,10 +265,10 @@ fn cond_code_name(cc: &AsmCondCode) -> &'static str {
     match cc {
         AsmCondCode::E => "eq",
         AsmCondCode::NE => "ne",
-        AsmCondCode::L => "lt",
-        AsmCondCode::LE => "le",
         AsmCondCode::G => "gt",
         AsmCondCode::GE => "ge",
+        AsmCondCode::L => "lt",
+        AsmCondCode::LE => "le",
     }
 }
 
