@@ -4,6 +4,6 @@ default:
     cd ./auto-test && python3.10 test_compiler ../target/debug/compiler --chapter 9 --stage validate
 
 
-run filename:
+run filename *args:
     cargo fmt
-    cargo run {{filename}}
+    cargo run -- {{filename}} {{args}}
