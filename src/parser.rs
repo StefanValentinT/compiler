@@ -126,14 +126,14 @@ pub fn parse(tokens: Queue<Token>) -> Program {
     let mut funcs = Vec::new();
 
     while tokens.peek().unwrap() != Token::EOF {
-        funcs.push(parse_func_decl(&mut tokens));
+        funcs.push(parse_fun_decl(&mut tokens));
     }
 
     Program::Program(funcs)
 }
 
-fn parse_func_decl(tokens: &mut Queue<Token>) -> FunDecl {
-    expect(Token::Keyword("int".into()), tokens);
+fn parse_fun_decl(tokens: &mut Queue<Token>) -> FunDecl {
+    expect(Token::Keyword("fun".to_string()), tokens);
 
     let name = match tokens.remove().unwrap() {
         Token::Identifier(n) => n,
@@ -143,6 +143,8 @@ fn parse_func_decl(tokens: &mut Queue<Token>) -> FunDecl {
     expect(Token::OpenParen, tokens);
     let params = parse_param_list(tokens);
     expect(Token::CloseParen, tokens);
+
+    expect(Token::Keyword("I32".into()), tokens);
 
     let body = match tokens.peek().unwrap() {
         Token::OpenBrace => Some(parse_block(tokens)),
@@ -166,12 +168,12 @@ fn parse_param_list(tokens: &mut Queue<Token>) -> Vec<String> {
             let mut params = Vec::new();
 
             loop {
-                expect(Token::Keyword("int".into()), tokens);
-
                 let name = match tokens.remove().unwrap() {
                     Token::Identifier(n) => n,
                     t => panic!("Expected parameter name, got {:?}", t),
                 };
+
+                expect(Token::Keyword("I32".into()), tokens);
 
                 params.push(name);
 
@@ -206,13 +208,13 @@ fn parse_block(tokens: &mut Queue<Token>) -> Block {
 
 fn parse_block_item(tokens: &mut Queue<Token>) -> BlockItem {
     match tokens.peek().unwrap() {
-        Token::Keyword(ref s) if s == "int" => BlockItem::D(parse_declaration(tokens)),
+        Token::Keyword(ref s) if s == "I32" => BlockItem::D(parse_declaration(tokens)),
         _ => BlockItem::S(parse_statement(tokens)),
     }
 }
 
 fn parse_declaration(tokens: &mut Queue<Token>) -> Decl {
-    expect(Token::Keyword("int".into()), tokens);
+    expect(Token::Keyword("I32".into()), tokens);
 
     let name = match tokens.remove().unwrap() {
         Token::Identifier(n) => n,
@@ -460,7 +462,7 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
 
 fn parse_for_init(tokens: &mut Queue<Token>) -> ForInit {
     match tokens.peek().unwrap() {
-        Token::Keyword(ref s) if s == "int" => {
+        Token::Keyword(ref s) if s == "I32" => {
             let var = parse_var_decl(tokens);
             ForInit::InitDecl(var)
         }
@@ -473,7 +475,7 @@ fn parse_for_init(tokens: &mut Queue<Token>) -> ForInit {
 }
 
 fn parse_var_decl(tokens: &mut Queue<Token>) -> VarDecl {
-    expect(Token::Keyword("int".into()), tokens);
+    expect(Token::Keyword("I32".into()), tokens);
 
     let name = match tokens.remove().unwrap() {
         Token::Identifier(n) => n,

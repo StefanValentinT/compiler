@@ -1,13 +1,12 @@
-
-int fib(int n){
+fun fib(n I32) I32 {
     if (n<2){
         return n;
     } else{
         return fib(n-1) + fib(n-2);
     }
 }
-int main(void) {
-    int ex = fib(10);
+fun main(void) I32 {
+    I32 ex = fib(10);
     return ex;
 }
 

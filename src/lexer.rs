@@ -12,18 +12,15 @@ pub enum Token {
     CloseBrace,
     Semicolon,
 
-    
     Tilde,
-    Minus, 
+    Minus,
     Decrement,
 
-    
     Plus,
     Multiply,
     Divide,
     Remainder,
 
-    
     Not,
     And,
     Or,
@@ -34,7 +31,6 @@ pub enum Token {
     LessOrEqual,
     GreaterOrEqual,
 
-    
     Assign,
 
     QuestionMark,
@@ -45,9 +41,9 @@ pub enum Token {
     EOF,
 }
 
-const KEYWORDS: [&str; 12] = [
-    "int", "void", "return", "if", "else", "do", "while", "for", "break", "continue", "switch",
-    "default",
+const KEYWORDS: [&str; 13] = [
+    "fun", "I32", "void", "return", "if", "else", "do", "while", "for", "break", "continue",
+    "switch", "default",
 ];
 
 fn is_boundary(c: char) -> bool {

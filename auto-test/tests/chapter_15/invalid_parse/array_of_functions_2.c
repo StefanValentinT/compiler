@@ -1,2 +1,0 @@
-
-int (foo[3])(int a);

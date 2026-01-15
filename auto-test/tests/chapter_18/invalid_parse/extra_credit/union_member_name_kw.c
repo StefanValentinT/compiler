@@ -1,5 +1,0 @@
-
-
-union u {
-    int struct;
-};

@@ -1,0 +1,24 @@
+{
+  "name": "haiku",
+  "displayName": "Haiku Language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "haiku",
+        "aliases": ["Haiku"],
+        "extensions": [".hk"]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "haiku",
+        "scopeName": "source.haiku",
+        "path": "./syntaxes/haiku.tmLanguage.json"
+      }
+    ]
+  }
+}

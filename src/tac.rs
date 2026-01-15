@@ -115,13 +115,11 @@ fn funcdecl_to_tac(func: FunDecl) -> Option<TacFuncDef> {
                         });
                     }
 
-                    
                     Decl::Variable(VarDecl {
                         name: _,
                         init_expr: None,
                     }) => (),
 
-                    
                     Decl::Function(_) => (),
                 },
             }

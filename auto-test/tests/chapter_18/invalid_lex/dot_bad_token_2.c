@@ -1,9 +1,0 @@
-struct s {
-    int a;
-};
-
-int main(void) {
-    struct s x;
-    
-    return x.0foo;
-}

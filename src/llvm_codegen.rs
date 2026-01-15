@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 
 use crate::tac::{TacBinaryOp, TacFuncDef, TacInstruction, TacProgram, TacUnaryOp, TacVal};
 
-
 pub fn emit_llvm(program: &TacProgram) -> String {
     let TacProgram::Program(funcs) = program;
 
@@ -55,13 +54,13 @@ pub fn emit_function(
     let locals = collect_locals(body, params);
 
     let mut out = String::new();
-    
+
     out.push_str(&format!(
         "define i32 @{}({}) {{\n",
         name,
         params
             .iter()
-            .map(|p| format!("i32 %arg_{}", p)) 
+            .map(|p| format!("i32 %arg_{}", p))
             .collect::<Vec<_>>()
             .join(", ")
     ));
@@ -74,7 +73,6 @@ pub fn emit_function(
         }
     }
 
-    
     for p in params {
         out.push_str(&format!(
             "  %{} = alloca i32\n  store i32 %arg_{}, i32* %{}\n",
@@ -82,7 +80,6 @@ pub fn emit_function(
         ));
     }
 
-    
     for instr in body {
         out.push_str(&emit_instr(
             instr,
@@ -95,9 +92,6 @@ pub fn emit_function(
     out.push_str("}\n");
     out
 }
-
-
-
 
 fn emit_instr(
     instr: &TacInstruction,
@@ -214,23 +208,15 @@ fn emit_instr(
         TacInstruction::Jump { target } => format!("  br label %{}\n", target),
 
         TacInstruction::JumpIfZero { condition, target } => {
-            
             let (load_instr, val_name) = load_val_instr(condition, reg_counter);
 
-            
             let reg_num = *reg_counter;
-            let r = fresh_reg(reg_counter); 
-            let cont_label = format!("cont{}", reg_num); 
+            let r = fresh_reg(reg_counter);
+            let cont_label = format!("cont{}", reg_num);
 
             format!(
                 "{}  {} = icmp eq i32 {}, 0\n  br i1 {}, label %{}, label %{}\n{}:\n",
-                load_instr, 
-                r,          
-                val_name,   
-                r,          
-                target,     
-                cont_label, 
-                cont_label  
+                load_instr, r, val_name, r, target, cont_label, cont_label
             )
         }
 
@@ -238,8 +224,8 @@ fn emit_instr(
             let (load_instr, val_name) = load_val_instr(condition, reg_counter);
 
             let reg_num = *reg_counter;
-            let r = fresh_reg(reg_counter); 
-            let cont_label = format!("cont{}", reg_num); 
+            let r = fresh_reg(reg_counter);
+            let cont_label = format!("cont{}", reg_num);
 
             format!(
                 "{}  {} = icmp ne i32 {}, 0\n  br i1 {}, label %{}, label %{}\n{}:\n",
@@ -277,9 +263,6 @@ fn emit_instr(
         }
     }
 }
-
-
-
 
 fn load_val_instr(v: &TacVal, reg_counter: &mut usize) -> (String, String) {
     match v {

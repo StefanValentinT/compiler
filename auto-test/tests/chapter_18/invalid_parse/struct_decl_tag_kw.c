@@ -1,4 +1,0 @@
-
-struct for {
-    int a;
-};

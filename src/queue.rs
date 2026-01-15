@@ -22,7 +22,6 @@ impl<T: Clone + PartialEq> Queue<T> {
 }
 
 impl<T: Clone> Queue<T> {
-    
     pub fn peek_n(&self, n: usize) -> Result<T, &str> {
         if n < self.queue.len() {
             Ok(self.queue[n].clone())

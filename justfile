@@ -7,3 +7,13 @@ default:
 run filename *args:
     cargo fmt
     cargo run -- {{filename}} {{args}}
+
+test:
+    cargo fmt
+    cargo test
+
+vscode_config:
+    #!/usr/bin/env sh
+    cd haiku-vscode
+    vsce package
+    codium --install-extension haiku-0.0.1.vsix --force

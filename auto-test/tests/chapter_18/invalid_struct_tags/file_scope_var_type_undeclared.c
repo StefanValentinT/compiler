@@ -1,6 +1,0 @@
-
-
-
-
-
-struct s var;

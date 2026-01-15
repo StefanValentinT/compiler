@@ -45,7 +45,6 @@ fn emit_function(func: &AsmFuncDef, out: &mut String) {
 
     for instr in instructions {
         match instr {
-            
             AsmInstruction::Jmp(label) if label == "__func_exit" => {
                 if let Some(exit) = exit_label {
                     writeln!(out, "    b {}", exit).unwrap();
@@ -183,26 +182,24 @@ fn emit_instruction(instr: &AsmInstruction, out: &mut String) {
             }
             _ => panic!("Invalid setcc operand"),
         },
-        AsmInstruction::Idiv(op) => {
-            match op {
-                AsmOperand::Reg(divisor) => {
-                    writeln!(out, "    mov w11, w0").unwrap(); 
-                    writeln!(out, "    sdiv w0, w11, {}", reg_name(divisor)).unwrap(); 
-                    writeln!(out, "    mul w1, w0, {}", reg_name(divisor)).unwrap(); 
-                    writeln!(out, "    sub w1, w11, w1").unwrap(); 
-                }
-                AsmOperand::Stack(off) => {
-                    writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap(); 
-                    writeln!(out, "    mov w11, w0").unwrap(); 
-                    writeln!(out, "    sdiv w0, w11, w10").unwrap(); 
-                    writeln!(out, "    mul w1, w0, w10").unwrap(); 
-                    writeln!(out, "    sub w1, w11, w1").unwrap(); 
-                }
-                _ => panic!("Invalid Idiv operand"),
+        AsmInstruction::Idiv(op) => match op {
+            AsmOperand::Reg(divisor) => {
+                writeln!(out, "    mov w11, w0").unwrap();
+                writeln!(out, "    sdiv w0, w11, {}", reg_name(divisor)).unwrap();
+                writeln!(out, "    mul w1, w0, {}", reg_name(divisor)).unwrap();
+                writeln!(out, "    sub w1, w11, w1").unwrap();
             }
-        }
+            AsmOperand::Stack(off) => {
+                writeln!(out, "    ldr w10, [x29, #{}]", off).unwrap();
+                writeln!(out, "    mov w11, w0").unwrap();
+                writeln!(out, "    sdiv w0, w11, w10").unwrap();
+                writeln!(out, "    mul w1, w0, w10").unwrap();
+                writeln!(out, "    sub w1, w11, w1").unwrap();
+            }
+            _ => panic!("Invalid Idiv operand"),
+        },
         AsmInstruction::Cdq => {
-            writeln!(out, "    sxtw x1, w0").unwrap(); 
+            writeln!(out, "    sxtw x1, w0").unwrap();
         }
         AsmInstruction::Jmp(label) => writeln!(out, "    b {}", label).unwrap(),
         AsmInstruction::JmpCC(cc, label) => {
@@ -224,8 +221,6 @@ fn emit_instruction(instr: &AsmInstruction, out: &mut String) {
         },
 
         AsmInstruction::Call(func_name) => {
-            
-            
             writeln!(out, "    mov w0, w3").unwrap();
 
             let call_name = if cfg!(target_os = "macos") {

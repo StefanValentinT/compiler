@@ -1,0 +1,32 @@
+{
+  "scopeName": "source.haiku",
+  "patterns": [
+    {
+      "match": "\\b(fun|if|else|while|return)\\b",
+      "name": "keyword.control.haiku"
+    },
+    {
+      "match": "\\b(I32|Bool)\\b",
+      "name": "storage.type.haiku"
+    },
+    {
+      "match": "\\b\\d+\\b",
+      "name": "constant.numeric.haiku"
+    },
+    {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.haiku"
+    },
+    {
+    "match": "//.*$",
+    "name": "comment.line.double-slash.haiku"
+  },
+  {
+    "begin": "/\\*",
+    "end": "\\*/",
+    "name": "comment.block.haiku"
+  }
+    
+  ]
+}

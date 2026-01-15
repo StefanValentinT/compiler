@@ -1,5 +1,0 @@
-
-
-int main(void) {
-    return (void)1 && 2;
-}
