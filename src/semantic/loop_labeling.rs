@@ -74,34 +74,6 @@ pub fn label_statement(stmt: Stmt, current_label: Option<String>) -> Stmt {
             }
         }
 
-        Stmt::For {
-            init,
-            condition,
-            post,
-            body,
-            ..
-        } => {
-            let new_label = make_loop_label();
-            let labeled_body = Box::new(label_statement(*body, Some(new_label.clone())));
-            Stmt::For {
-                init,
-                condition,
-                post,
-                body: labeled_body,
-                label: new_label,
-            }
-        }
-
-        Stmt::If {
-            condition,
-            then_case,
-            else_case,
-        } => Stmt::If {
-            condition,
-            then_case: Box::new(label_statement(*then_case, current_label.clone())),
-            else_case: else_case.map(|e| Box::new(label_statement(*e, current_label.clone()))),
-        },
-
         Stmt::Compound(block) => Stmt::Compound(label_block(block, current_label)),
 
         Stmt::Return(_) | Stmt::Expression(_) | Stmt::Null => stmt,

@@ -106,7 +106,7 @@ fn funcdecl_to_tac(func: FunDecl) -> Option<TacFuncDef> {
                 BlockItem::D(decl) => match decl {
                     Decl::Variable(VarDecl {
                         name,
-                        init_expr: Some(expr),
+                        init_expr: expr,
                     }) => {
                         let rhs = expr_to_tac(expr, &mut instructions);
                         instructions.push(TacInstruction::Copy {
@@ -114,13 +114,6 @@ fn funcdecl_to_tac(func: FunDecl) -> Option<TacFuncDef> {
                             dest: TacVal::Var(name),
                         });
                     }
-
-                    Decl::Variable(VarDecl {
-                        name: _,
-                        init_expr: None,
-                    }) => (),
-
-                    Decl::Function(_) => (),
                 },
             }
         }
@@ -149,41 +142,6 @@ fn stmt_to_tac(stmt: Stmt, instructions: &mut Vec<TacInstruction>) {
             expr_to_tac(expr, instructions);
         }
         Stmt::Null => (),
-        Stmt::If {
-            condition,
-            then_case,
-            else_case,
-        } => {
-            let cond_val = expr_to_tac(condition, instructions);
-            let end_label = make_if_end();
-
-            match else_case {
-                Some(else_stmt) => {
-                    let else_label = make_if_else();
-                    instructions.push(TacInstruction::JumpIfZero {
-                        condition: cond_val,
-                        target: else_label.clone(),
-                    });
-
-                    stmt_to_tac(*then_case, instructions);
-                    instructions.push(TacInstruction::Jump {
-                        target: end_label.clone(),
-                    });
-                    instructions.push(TacInstruction::Label(else_label));
-                    stmt_to_tac(*else_stmt, instructions);
-
-                    instructions.push(TacInstruction::Label(end_label));
-                }
-                None => {
-                    instructions.push(TacInstruction::JumpIfZero {
-                        condition: cond_val,
-                        target: end_label.clone(),
-                    });
-                    stmt_to_tac(*then_case, instructions);
-                    instructions.push(TacInstruction::Label(end_label));
-                }
-            }
-        }
         Stmt::Compound(block) => {
             let crate::parser::Block::Block(items) = block;
 
@@ -196,19 +154,13 @@ fn stmt_to_tac(stmt: Stmt, instructions: &mut Vec<TacInstruction>) {
                     BlockItem::D(decl) => match decl {
                         Decl::Variable(VarDecl {
                             name,
-                            init_expr: Some(init),
+                            init_expr: init,
                         }) => {
                             let rhs = expr_to_tac(init, instructions);
                             instructions.push(TacInstruction::Copy {
                                 src: rhs,
                                 dest: TacVal::Var(name),
                             });
-                        }
-                        Decl::Variable(VarDecl {
-                            init_expr: None, ..
-                        }) => (),
-                        Decl::Function(fun_decl) => {
-                            funcdecl_to_tac(fun_decl);
                         }
                     },
                 }
@@ -268,61 +220,6 @@ fn stmt_to_tac(stmt: Stmt, instructions: &mut Vec<TacInstruction>) {
             });
             instructions.push(TacInstruction::Label(break_label));
         }
-
-        Stmt::For {
-            init,
-            condition,
-            post,
-            body,
-            label,
-        } => {
-            let break_label = format!("break_{}", label);
-            let continue_label = format!("continue_{}", label);
-            let start_label = format!("start_{}", label);
-
-            match init {
-                crate::parser::ForInit::InitDecl(d) => {
-                    if let VarDecl {
-                        name,
-                        init_expr: Some(e),
-                    } = d
-                    {
-                        let rhs = expr_to_tac(e, instructions);
-                        instructions.push(TacInstruction::Copy {
-                            src: rhs,
-                            dest: TacVal::Var(name),
-                        });
-                    }
-                }
-                crate::parser::ForInit::InitExpr(e) => {
-                    if let Some(e) = e {
-                        expr_to_tac(e, instructions);
-                    }
-                }
-            }
-
-            instructions.push(TacInstruction::Label(start_label.clone()));
-
-            if let Some(cond) = condition {
-                let cond_val = expr_to_tac(cond, instructions);
-                instructions.push(TacInstruction::JumpIfZero {
-                    condition: cond_val,
-                    target: break_label.clone(),
-                });
-            }
-
-            stmt_to_tac(*body, instructions);
-
-            instructions.push(TacInstruction::Label(continue_label.clone()));
-            if let Some(post_expr) = post {
-                expr_to_tac(post_expr, instructions);
-            }
-
-            instructions.push(TacInstruction::Jump {
-                target: start_label.clone(),
-            });
-            instructions.push(TacInstruction::Label(break_label));
-        }
     }
 }
 
@@ -368,7 +265,7 @@ fn expr_to_tac(e: Expr, instructions: &mut Vec<TacInstruction>) -> TacVal {
             }
             _ => panic!("Invalid lvalue in assignment!"),
         },
-        Expr::Conditional(condition, expr1, expr2) => {
+        Expr::IfThenElse(condition, expr1, expr2) => {
             let result_name = make_temporary();
             let result = TacVal::Var(result_name.clone());
 

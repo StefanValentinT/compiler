@@ -2,7 +2,7 @@
   "scopeName": "source.haiku",
   "patterns": [
     {
-      "match": "\\b(fun|if|else|while|return)\\b",
+      "match": "\\b(fun|if|then|else|while|return|let)\\b",
       "name": "keyword.control.haiku"
     },
     {

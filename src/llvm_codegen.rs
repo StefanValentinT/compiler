@@ -80,13 +80,32 @@ pub fn emit_function(
         ));
     }
 
+    let mut prev_terminated = false;
+
     for instr in body {
+        if let TacInstruction::Label(name) = instr {
+            if !prev_terminated {
+                out.push_str(&format!("  br label %{}\n", name));
+            }
+            prev_terminated = false;
+            out.push_str(&format!("{}:\n", name));
+            continue;
+        }
+
         out.push_str(&emit_instr(
             instr,
             defined_functions,
             external_functions,
             reg_counter,
         ));
+
+        prev_terminated = matches!(
+            instr,
+            TacInstruction::Return(_)
+                | TacInstruction::Jump { .. }
+                | TacInstruction::JumpIfZero { .. }
+                | TacInstruction::JumpIfNotZero { .. }
+        );
     }
 
     out.push_str("}\n");

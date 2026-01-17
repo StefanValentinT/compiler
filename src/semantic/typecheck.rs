@@ -30,7 +30,6 @@ pub fn typecheck(program: Program) -> Program {
 fn typecheck_decl(decl: &Decl, symbols: &mut SymbolTable) {
     match decl {
         Decl::Variable(v) => typecheck_var_decl(v, symbols),
-        Decl::Function(f) => typecheck_fun_decl(f.clone(), symbols),
     }
 }
 
@@ -42,7 +41,7 @@ fn typecheck_var_decl(decl: &VarDecl, symbols: &mut SymbolTable) {
             defined: false,
         },
     );
-    if let Some(init_expr) = &decl.init_expr {
+    if let init_expr = &decl.init_expr {
         typecheck_expr(init_expr, symbols);
     }
 }
@@ -103,17 +102,6 @@ fn typecheck_stmt(stmt: &Stmt, symbols: &mut SymbolTable) {
     match stmt {
         Stmt::Return(expr) => typecheck_expr(expr, symbols),
         Stmt::Expression(expr) => typecheck_expr(expr, symbols),
-        Stmt::If {
-            condition,
-            then_case,
-            else_case,
-        } => {
-            typecheck_expr(condition, symbols);
-            typecheck_stmt(then_case, symbols);
-            if let Some(else_case) = else_case {
-                typecheck_stmt(else_case, symbols);
-            }
-        }
         Stmt::Compound(block) => typecheck_block(block, symbols),
         Stmt::While {
             condition, body, ..
@@ -126,29 +114,6 @@ fn typecheck_stmt(stmt: &Stmt, symbols: &mut SymbolTable) {
         } => {
             typecheck_stmt(body, symbols);
             typecheck_expr(condition, symbols);
-        }
-        Stmt::For {
-            init,
-            condition,
-            post,
-            body,
-            ..
-        } => {
-            match init {
-                ForInit::InitDecl(decl) => typecheck_var_decl(decl, symbols),
-                ForInit::InitExpr(expr_opt) => {
-                    if let Some(expr) = expr_opt {
-                        typecheck_expr(expr, symbols);
-                    }
-                }
-            }
-            if let Some(cond) = condition {
-                typecheck_expr(cond, symbols);
-            }
-            if let Some(post_expr) = post {
-                typecheck_expr(post_expr, symbols);
-            }
-            typecheck_stmt(body, symbols);
         }
         Stmt::Break { .. } | Stmt::Continue { .. } | Stmt::Null => { /* nothing */ }
     }
@@ -176,7 +141,7 @@ fn typecheck_expr(e: &Expr, symbols: &mut SymbolTable) {
             typecheck_expr(lhs, symbols);
             typecheck_expr(rhs, symbols);
         }
-        Expr::Conditional(cond, then_expr, else_expr) => {
+        Expr::IfThenElse(cond, then_expr, else_expr) => {
             typecheck_expr(cond, symbols);
             typecheck_expr(then_expr, symbols);
             typecheck_expr(else_expr, symbols);

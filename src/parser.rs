@@ -1,5 +1,3 @@
-use std::sync::atomic::{AtomicI32, Ordering};
-
 use crate::{
     lexer::Token,
     queue::{IsQueue, Queue},
@@ -12,14 +10,13 @@ pub enum Program {
 
 #[derive(Debug, Clone)]
 pub enum Decl {
-    Function(FunDecl),
     Variable(VarDecl),
 }
 
 #[derive(Debug, Clone)]
 pub struct VarDecl {
     pub name: String,
-    pub init_expr: Option<Expr>,
+    pub init_expr: Expr,
 }
 
 #[derive(Debug, Clone)]
@@ -44,11 +41,6 @@ pub enum BlockItem {
 pub enum Stmt {
     Return(Expr),
     Expression(Expr),
-    If {
-        condition: Expr,
-        then_case: Box<Stmt>,
-        else_case: Option<Box<Stmt>>,
-    },
     Compound(Block),
 
     Break {
@@ -68,21 +60,8 @@ pub enum Stmt {
         condition: Expr,
         label: String,
     },
-    For {
-        init: ForInit,
-        condition: Option<Expr>,
-        post: Option<Expr>,
-        body: Box<Stmt>,
-        label: String,
-    },
 
     Null,
-}
-
-#[derive(Debug, Clone)]
-pub enum ForInit {
-    InitDecl(VarDecl),
-    InitExpr(Option<Expr>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -92,7 +71,7 @@ pub enum Expr {
     Unary(UnaryOp, Box<Expr>),
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
     Assignment(Box<Expr>, Box<Expr>),
-    Conditional(Box<Expr>, Box<Expr>, Box<Expr>),
+    IfThenElse(Box<Expr>, Box<Expr>, Box<Expr>),
     FunctionCall(String, Vec<Expr>),
 }
 
@@ -169,6 +148,7 @@ fn parse_param_list(tokens: &mut Queue<Token>) -> Vec<String> {
                     Token::Identifier(n) => n,
                     t => panic!("Expected parameter name, got {:?}", t),
                 };
+                expect(Token::Colon, tokens);
 
                 expect(Token::Keyword("I32".into()), tokens);
 
@@ -205,49 +185,28 @@ fn parse_block(tokens: &mut Queue<Token>) -> Block {
 
 fn parse_block_item(tokens: &mut Queue<Token>) -> BlockItem {
     match tokens.peek().unwrap() {
-        Token::Keyword(ref s) if s == "I32" => BlockItem::D(parse_declaration(tokens)),
+        Token::Keyword(ref s) if s == "let" => BlockItem::D(parse_declaration(tokens)),
         _ => BlockItem::S(parse_statement(tokens)),
     }
 }
 
 fn parse_declaration(tokens: &mut Queue<Token>) -> Decl {
-    expect(Token::Keyword("I32".into()), tokens);
+    expect(Token::Keyword("let".into()), tokens);
 
     let name = match tokens.remove().unwrap() {
         Token::Identifier(n) => n,
-        t => panic!("Expected identifier, got {:?}", t),
+        t => panic!("Expected variable name, got {:?}", t),
     };
 
-    match tokens.peek().unwrap() {
-        Token::OpenParen => {
-            expect(Token::OpenParen, tokens);
-            let params = parse_param_list(tokens);
-            expect(Token::CloseParen, tokens);
-            expect(Token::Semicolon, tokens);
+    expect(Token::Colon, tokens);
+    expect(Token::Keyword("I32".into()), tokens);
 
-            Decl::Function(FunDecl {
-                name,
-                params,
-                body: None,
-            })
-        }
+    expect(Token::Assign, tokens);
+    let init_expr = parse_expr(tokens, 0);
 
-        _ => {
-            let expr = if tokens.peek().unwrap() == Token::Assign {
-                tokens.consume();
-                Some(parse_expr(tokens, 0))
-            } else {
-                None
-            };
+    expect(Token::Semicolon, tokens);
 
-            expect(Token::Semicolon, tokens);
-
-            Decl::Variable(VarDecl {
-                name,
-                init_expr: expr,
-            })
-        }
-    }
+    Decl::Variable(VarDecl { name, init_expr })
 }
 
 fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
@@ -258,25 +217,6 @@ fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
                 let expr = parse_expr(tokens, 0);
                 expect(Token::Semicolon, tokens);
                 Stmt::Return(expr)
-            }
-
-            "if" => {
-                tokens.consume();
-                expect(Token::OpenParen, tokens);
-                let condition = parse_expr(tokens, 0);
-                expect(Token::CloseParen, tokens);
-                let then_case = Box::new(parse_statement(tokens));
-                let else_case = if tokens.peek().unwrap() == Token::Keyword("else".to_string()) {
-                    tokens.consume();
-                    Some(Box::new(parse_statement(tokens)))
-                } else {
-                    None
-                };
-                Stmt::If {
-                    condition,
-                    then_case,
-                    else_case,
-                }
             }
 
             "break" => {
@@ -323,28 +263,11 @@ fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
                 }
             }
 
-            "for" => {
-                tokens.consume();
-                expect(Token::OpenParen, tokens);
-
-                let init = parse_for_init(tokens);
-                let condition = parse_optional_expr(tokens, Token::Semicolon);
+            _ => {
+                let expr = parse_expr(tokens, 0);
                 expect(Token::Semicolon, tokens);
-                let post = parse_optional_expr(tokens, Token::CloseParen);
-
-                expect(Token::CloseParen, tokens);
-                let body = Box::new(parse_statement(tokens));
-
-                Stmt::For {
-                    init,
-                    condition,
-                    post,
-                    body,
-                    label: String::new(),
-                }
+                Stmt::Expression(expr)
             }
-
-            _ => panic!("Unexpected keyword {:?}", s),
         },
 
         Token::OpenBrace => {
@@ -367,6 +290,22 @@ fn parse_statement(tokens: &mut Queue<Token>) -> Stmt {
 
 fn parse_factor(tokens: &mut Queue<Token>) -> Expr {
     match tokens.remove().unwrap() {
+        Token::Keyword(ref s) if s == "if" => {
+            let condition = parse_expr(tokens, 0);
+
+            expect(Token::Keyword("then".to_string()), tokens);
+            let then_expr = parse_expr(tokens, 0);
+
+            expect(Token::Keyword("else".to_string()), tokens);
+            let else_expr = parse_expr(tokens, 0);
+
+            Expr::IfThenElse(
+                Box::new(condition),
+                Box::new(then_expr),
+                Box::new(else_expr),
+            )
+        }
+
         Token::IntLiteral(v) => Expr::Constant(v),
 
         Token::Identifier(name) => {
@@ -443,7 +382,7 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
             Token::QuestionMark => {
                 let middle = parse_conditional_middle(tokens);
                 let right = parse_expr(tokens, precedence(&Token::QuestionMark));
-                left = Expr::Conditional(Box::new(left), Box::new(middle), Box::new(right));
+                left = Expr::IfThenElse(Box::new(left), Box::new(middle), Box::new(right));
             }
 
             _ => {
@@ -455,55 +394,6 @@ fn parse_expr(tokens: &mut Queue<Token>, min_prec: i32) -> Expr {
     }
 
     left
-}
-
-fn parse_for_init(tokens: &mut Queue<Token>) -> ForInit {
-    match tokens.peek().unwrap() {
-        Token::Keyword(ref s) if s == "I32" => {
-            let var = parse_var_decl(tokens);
-            ForInit::InitDecl(var)
-        }
-        _ => {
-            let expr = parse_optional_expr(tokens, Token::Semicolon);
-            expect(Token::Semicolon, tokens);
-            ForInit::InitExpr(expr)
-        }
-    }
-}
-
-fn parse_var_decl(tokens: &mut Queue<Token>) -> VarDecl {
-    expect(Token::Keyword("I32".into()), tokens);
-
-    let name = match tokens.remove().unwrap() {
-        Token::Identifier(n) => n,
-        t => panic!("Expected variable name, got {:?}", t),
-    };
-
-    if tokens.peek().unwrap() == Token::OpenParen {
-        panic!("Function declaration not allowed in for-loop initializer");
-    }
-
-    let expr = if tokens.peek().unwrap() == Token::Assign {
-        tokens.consume();
-        Some(parse_expr(tokens, 0))
-    } else {
-        None
-    };
-
-    expect(Token::Semicolon, tokens);
-
-    VarDecl {
-        name,
-        init_expr: expr,
-    }
-}
-
-fn parse_optional_expr(tokens: &mut Queue<Token>, end: Token) -> Option<Expr> {
-    if tokens.peek().unwrap() == end {
-        None
-    } else {
-        Some(parse_expr(tokens, 0))
-    }
 }
 
 fn parse_conditional_middle(tokens: &mut Queue<Token>) -> Expr {

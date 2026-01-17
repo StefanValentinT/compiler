@@ -41,32 +41,10 @@ pub enum Token {
     EOF,
 }
 
-const KEYWORDS: [&str; 12] = [
-    "fun", "I32", "return", "if", "else", "do", "while", "for", "break", "continue", "switch",
-    "default",
+const KEYWORDS: [&str; 13] = [
+    "fun", "I32", "return", "if", "then", "else", "do", "while", "break", "continue", "switch",
+    "default", "let",
 ];
-
-fn is_boundary(c: char) -> bool {
-    matches!(
-        c,
-        ' ' | '\t'
-            | '\n'
-            | '('
-            | ')'
-            | '{'
-            | '}'
-            | ';'
-            | ','
-            | '+'
-            | '-'
-            | '*'
-            | '/'
-            | '%'
-            | '='
-            | '<'
-            | '>'
-    )
-}
 
 pub fn lex_string(input: String) -> Queue<Token> {
     let mut input = str_to_queue(input);
@@ -200,17 +178,6 @@ where
     }
 }
 
-fn next_needs_to_be_boundary(input: &Queue<char>) {
-    if let Ok(c) = input.peek() {
-        if !is_boundary(c) {
-            panic!(
-                "Invalid token: next character '{}' must be a token boundary",
-                c
-            );
-        }
-    }
-}
-
 fn is_keyword(s: &str) -> bool {
     KEYWORDS.contains(&s)
 }
@@ -225,8 +192,6 @@ fn lex_identifier(input: &mut Queue<char>) -> Token {
             break;
         }
     }
-
-    next_needs_to_be_boundary(input);
 
     if is_keyword(&ident) {
         Token::Keyword(ident)
@@ -245,8 +210,6 @@ fn lex_int(input: &mut Queue<char>) -> Token {
             break;
         }
     }
-
-    next_needs_to_be_boundary(input);
 
     Token::IntLiteral(value)
 }

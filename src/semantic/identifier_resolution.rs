@@ -1,6 +1,6 @@
 use crate::{
     gen_names::make_temporary,
-    parser::{Block, BlockItem, Decl, Expr, ForInit, FunDecl, Program, Stmt, VarDecl},
+    parser::{Block, BlockItem, Decl, Expr, FunDecl, Program, Stmt, VarDecl},
 };
 use std::collections::HashMap;
 
@@ -49,9 +49,9 @@ fn resolve_block_item(
 
 fn resolve_var_decl_inner(
     name: String,
-    expr: Option<Expr>,
+    expr: Expr,
     identifier_map: &mut HashMap<String, MapEntry>,
-) -> (String, Option<Expr>) {
+) -> (String, Expr) {
     if identifier_map.contains_key(&name)
         && identifier_map
             .get(&name)
@@ -72,7 +72,7 @@ fn resolve_var_decl_inner(
         },
     );
 
-    let new_expr = expr.map(|e| resolve_expr(e, identifier_map));
+    let new_expr = resolve_expr(expr, identifier_map);
 
     (unique_name, new_expr)
 }
@@ -94,7 +94,6 @@ fn resolve_var_decl(decl: VarDecl, identifier_map: &mut HashMap<String, MapEntry
 fn resolve_decl(decl: Decl, identifier_map: &mut HashMap<String, MapEntry>) -> Decl {
     match decl {
         Decl::Variable(var_decl) => Decl::Variable(resolve_var_decl(var_decl, identifier_map)),
-        Decl::Function(fun_decl) => Decl::Function(resolve_fun_decl(fun_decl, identifier_map)),
     }
 }
 
@@ -159,16 +158,6 @@ fn resolve_stmt(stmt: Stmt, identifier_map: &mut HashMap<String, MapEntry>) -> S
         Stmt::Expression(expr) => Stmt::Expression(resolve_expr(expr, identifier_map)),
         Stmt::Null => Stmt::Null,
 
-        Stmt::If {
-            condition,
-            then_case,
-            else_case,
-        } => Stmt::If {
-            condition: resolve_expr(condition, identifier_map),
-            then_case: Box::new(resolve_stmt(*then_case, identifier_map)),
-            else_case: else_case.map(|e| Box::new(resolve_stmt(*e, identifier_map))),
-        },
-
         Stmt::Compound(block) => {
             let mut new_map = copy_identifier_map(identifier_map);
             Stmt::Compound(resolve_block(block, &mut new_map))
@@ -199,38 +188,6 @@ fn resolve_stmt(stmt: Stmt, identifier_map: &mut HashMap<String, MapEntry>) -> S
             Stmt::DoWhile {
                 body,
                 condition: resolve_expr(condition, identifier_map),
-                label,
-            }
-        }
-
-        Stmt::For {
-            init,
-            condition,
-            post,
-            body,
-            label,
-        } => {
-            let mut new_map = copy_identifier_map(identifier_map);
-
-            let init = match init {
-                ForInit::InitDecl(d) => {
-                    crate::parser::ForInit::InitDecl(resolve_var_decl(d, &mut new_map))
-                }
-                ForInit::InitExpr(e) => {
-                    crate::parser::ForInit::InitExpr(e.map(|ex| resolve_expr(ex, &mut new_map)))
-                }
-            };
-
-            let condition = condition.map(|e| resolve_expr(e, &mut new_map));
-            let post = post.map(|e| resolve_expr(e, &mut new_map));
-
-            let body = Box::new(resolve_stmt(*body, &mut new_map));
-
-            Stmt::For {
-                init,
-                condition,
-                post,
-                body,
                 label,
             }
         }
@@ -265,11 +222,11 @@ fn resolve_expr(expr: Expr, identifier_map: &mut HashMap<String, MapEntry>) -> E
             }
             _ => panic!("Invalid lvalue in assignment!"),
         },
-        Expr::Conditional(expr, expr1, expr2) => {
+        Expr::IfThenElse(expr, expr1, expr2) => {
             let expr_r = resolve_expr(*expr, identifier_map);
             let expr1_r = resolve_expr(*expr1, identifier_map);
             let expr2_r = resolve_expr(*expr2, identifier_map);
-            Expr::Conditional(Box::new(expr_r), Box::new(expr1_r), Box::new(expr2_r))
+            Expr::IfThenElse(Box::new(expr_r), Box::new(expr1_r), Box::new(expr2_r))
         }
         Expr::FunctionCall(fun_name, args) => {
             if let Some(entry) = identifier_map.get(&fun_name) {

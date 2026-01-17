@@ -1,0 +1,17 @@
+fun fib(n: I32) I32 {
+    let x: I32 = if n < 2
+        then n
+        else fib(n - 1) + fib(n - 2);
+    return x;
+}
+
+fun main() I32 {
+    let ex: I32 = fib(10);
+    return ex;
+}
+
+/*
+<expect>
+55
+</expect>
+*/

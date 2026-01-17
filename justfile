@@ -10,7 +10,7 @@ run filename *args:
 
 test:
     cargo fmt
-    cargo test
+    cargo test -- --nocapture
 
 vscode_config:
     #!/usr/bin/env sh
